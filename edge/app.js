@@ -8,8 +8,10 @@ import {
   OBJECT_TYPE_OPTIONS,
   DEFAULT_OBJECT_TYPE,
   AUTO_CAPTURE_INTERVAL_OPTIONS,
-  DEFAULT_AUTO_CAPTURE_INTERVAL
+  DEFAULT_AUTO_CAPTURE_INTERVAL,
+  OBJECT_TYPE_MAP
 } from './config.js';
+import { isSelectedObjectTypeDetected } from './filter.js';
 
 // DOM elements
 const startBtn = document.getElementById("startBtn");
@@ -197,7 +199,7 @@ function checkObjectDetectionForAutoCapture(nowMs) {
   const thresholdMs = intervalMs * 0.8; // 80% of interval
 
   // Check if selected object type is currently detected
-  const isObjectDetected = isSelectedObjectTypeDetected(lastDetectionData, selectedObjectType);
+  const isObjectDetected = isSelectedObjectTypeDetected(lastDetectionData, selectedObjectType, OBJECT_TYPE_MAP);
   
   if (isObjectDetected) {
     // Object is detected
@@ -275,28 +277,7 @@ function checkObjectDetectionForAutoCapture(nowMs) {
   }
 }
 
-/**
- * Checks if the selected object type is present in the detection data
- */
-function isSelectedObjectTypeDetected(detections, filterType) {
-  if (filterType === "all") {
-    return detections.length > 0;
-  }
-  
-  // Object type mapping for filtering
-  const OBJECT_TYPE_MAP = {
-    person: ["person", "human"],
-    pet: ["dog", "cat", "bird"],
-    car: ["car", "truck", "bus", "motorcycle"]
-  };
-  
-  const allowedTypes = OBJECT_TYPE_MAP[filterType] || [];
-  
-  return detections.some(det => {
-    const categoryName = (det.categoryName || "").toLowerCase();
-    return allowedTypes.some(type => categoryName.includes(type));
-  });
-}
+// Use shared detection filter function
 
 // Auto-capture functionality (now handled by checkObjectDetectionForAutoCapture)
 function startAutoCapture() {

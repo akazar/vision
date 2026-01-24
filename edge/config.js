@@ -20,6 +20,13 @@ export const MODEL_CONFIG = {
   maxResults: 10,
 };
 
+// Object type mapping for filtering
+export const OBJECT_TYPE_MAP = {
+  person: ["person", "human"],
+  pet: ["dog", "cat", "bird"],
+  car: ["car", "truck", "bus", "motorcycle"]
+};
+
 // Drawing styles
 export const DRAWING_STYLES = {
   lineWidth: 2,
@@ -53,4 +60,3 @@ export const AUTO_CAPTURE_INTERVAL_OPTIONS = [
 ];
 
 export const DEFAULT_AUTO_CAPTURE_INTERVAL = 0; // Manual mode
-

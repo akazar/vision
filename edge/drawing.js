@@ -1,31 +1,5 @@
-import { DRAWING_STYLES } from './config.js';
-
-// Object type mapping for filtering
-const OBJECT_TYPE_MAP = {
-  person: ["person", "human"],
-  pet: ["dog", "cat", "bird"],
-  car: ["car", "truck", "bus", "motorcycle"]
-};
-
-/**
- * Filters detections by object type
- * @param {Array} detections - Array of detection objects
- * @param {string} filterType - Filter type ("all", "person", "pet", "car")
- * @returns {Array} Filtered detections
- */
-function filterDetectionsByType(detections, filterType) {
-  if (filterType === "all") {
-    return detections;
-  }
-  
-  const allowedTypes = OBJECT_TYPE_MAP[filterType] || [];
-  return detections.filter(det => {
-    const cat = det.categories?.[0];
-    if (!cat) return false;
-    const categoryName = cat.categoryName.toLowerCase();
-    return allowedTypes.some(type => categoryName.includes(type));
-  });
-}
+import { DRAWING_STYLES, OBJECT_TYPE_MAP } from './config.js';
+import { filterDetectionsByType } from './filter.js';
 
 /**
  * Draws a rounded rectangle with optional shadow
@@ -113,7 +87,7 @@ export function drawDetections(ctx, video, detections, smoothBoxes, smoothBBox, 
   const detectionData = [];
   
   // Filter detections by object type if specified
-  const filteredDetections = filterDetectionsByType(detections, objectFilter);
+  const filteredDetections = filterDetectionsByType(detections, objectFilter, OBJECT_TYPE_MAP);
   
   for (const det of filteredDetections) {
     const cat = det.categories?.[0];

@@ -35,7 +35,7 @@ export function smoothBBox(smoothBoxes, key, bbox, confidence = 0.5) {
  * Applies dead-zone filtering to remove micro-jitter
  * @param {Object} prev - Previous bounding box {x, y, w, h}
  * @param {Object} curr - Current bounding box {x, y, w, h}
- * @param {number} eps - Threshold in pixels (default: 2)
+ * @param {number} eps - Threshold in pixels (default: DEAD_ZONE_EPS)
  * @returns {Object} Filtered bounding box {x, y, w, h}
  */
 export function applyDeadZone(prev, curr, eps = DEAD_ZONE_EPS) {
