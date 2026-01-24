@@ -1,0 +1,30 @@
+{
+  "name": "vision-api-server",
+  "version": "1.0.0",
+  "description": "API server for vision detection analysis using OpenAI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "check-env": "node check-env.js",
+    "fix-env": "node fix-env.js"
+  },
+  "keywords": [
+    "vision",
+    "openai",
+    "object-detection"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.7.0",
+    "form-data": "^4.0.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
+

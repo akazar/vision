@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>MediaPipe Object Detector — Mobile Web</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+
+  <body>
+    <div class="stage">
+      <div class="top-controls">
+        <div class="status" id="status">Idle</div>
+      </div>
+      <div class="api-response" id="apiResponse" style="display: none;">
+        <button class="close-btn" id="closeResponse" aria-label="Close response">×</button>
+        <div class="api-response-content" id="apiResponseContent"></div>
+      </div>
+      <div class="settings-panel" id="settingsPanel" style="display: none;">
+        <button class="close-btn" id="closeSettings" aria-label="Close settings">×</button>
+        <div class="settings-controls">
+          <div class="control-row">
+            <label for="objectFilter" class="control-label">Filter by object type</label>
+            <select id="objectFilter" aria-label="Filter by object type">
+              <!-- Options will be populated from config.js -->
+            </select>
+          </div>
+          <div class="control-row">
+            <label for="autoCaptureInterval" class="control-label">Auto capture interval</label>
+            <select id="autoCaptureInterval" aria-label="Auto capture interval">
+              <!-- Options will be populated from config.js -->
+            </select>
+          </div>
+        </div>
+        <div class="control-row">
+          <label for="downloadImages" class="checkbox-label">
+            <input type="checkbox" id="downloadImages" aria-label="Download images on detection">
+            <span>Download images on detection</span>
+          </label>
+        </div>
+        <div class="control-row">
+          <button id="switchBtn" aria-label="Switch camera">↻ Switch Camera</button>
+        </div>
+      </div>
+      <div class="hud">
+        <button id="startBtn" aria-label="Start detection">▶</button>
+        <button id="stopBtn" aria-label="Stop detection" disabled>⏸</button>
+        <button id="captureBtn" aria-label="Capture screenshot and detection data">📷</button>
+        <button id="settingsBtn" aria-label="Open settings">⚙</button>
+      </div>
+
+      <video id="video" autoplay muted playsinline></video>
+      <canvas id="overlay"></canvas>
+      
+      <div class="frame-corners">
+        <div class="frame-corner top-left"></div>
+        <div class="frame-corner top-right"></div>
+        <div class="frame-corner bottom-left"></div>
+        <div class="frame-corner bottom-right"></div>
+      </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
