@@ -41,7 +41,7 @@ async function apiRequestProcessing(req) {
  * @param {string} timestamp - Timestamp string
  * @returns {Promise<Object>} Processed response object to send to client
  */
-async function llmResponceProcessing(openaiData, analysis, detections, timestamp) {
+async function apiResponceProcessing(openaiData, analysis, detections, timestamp) {
   // At this point, the LLM response is available for processing
   // You can modify it before it's sent back to the client
   
@@ -60,6 +60,6 @@ async function llmResponceProcessing(openaiData, analysis, detections, timestamp
 
 module.exports = {
   apiRequestProcessing,
-  llmResponceProcessing
+  apiResponceProcessing
 };
 

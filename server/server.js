@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 const { OPENAI_MODEL, MAX_TOKENS, createPrompt } = require('./config');
-const { apiRequestProcessing, llmResponceProcessing } = require('./middleware');
+const { apiRequestProcessing, apiResponceProcessing } = require('./middleware');
 
 // Load .env file with explicit UTF-8 encoding
 // .env file is in the parent directory (project root)
@@ -162,7 +162,7 @@ app.post('/api/analyze', upload.single('image'), async (req, res) => {
     const analysis = openaiData.choices[0]?.message?.content || 'No analysis available';
 
     // Process LLM response before sending it back to the client
-    await llmResponceProcessing(openaiData, analysis, detections, timestamp);
+    await apiResponceProcessing(openaiData, analysis, detections, timestamp);
 
     // Return the analysis along with the detection data
     res.json({
