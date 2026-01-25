@@ -3,9 +3,12 @@ const multer = require('multer');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
+const { OPENAI_MODEL, MAX_TOKENS, createPrompt } = require('./config');
+const { apiRequestProcessing, llmResponceProcessing } = require('./middleware');
 
 // Load .env file with explicit UTF-8 encoding
-const envPath = path.join(__dirname, '.env');
+// .env file is in the parent directory (project root)
+const envPath = path.join(__dirname, '..', '.env');
 if (fs.existsSync(envPath)) {
   // Read .env file as UTF-8 and parse manually if dotenv fails
   try {
@@ -30,10 +33,10 @@ if (fs.existsSync(envPath)) {
     console.log('✓ .env file loaded manually (UTF-8)');
   } catch (err) {
     console.warn('⚠️  Error reading .env file manually, trying dotenv:', err.message);
-    require('dotenv').config();
+    require('dotenv').config({ path: envPath });
   }
 } else {
-  require('dotenv').config();
+  require('dotenv').config({ path: envPath });
 }
 
 const app = express();
@@ -87,6 +90,9 @@ app.post('/api/analyze', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'No detection data provided' });
     }
 
+    // Process API request after receiving it
+    await apiRequestProcessing(req);
+
     const imageBuffer = req.file.buffer;
     const detections = JSON.parse(req.body.detections);
     const timestamp = req.body.timestamp || new Date().toISOString();
@@ -107,22 +113,12 @@ app.post('/api/analyze', upload.single('image'), async (req, res) => {
       `${det.categoryName} (${(det.score * 100).toFixed(0)}% confidence) at position [${det.x}, ${det.y}] with size ${det.width}×${det.height}`
     ).join('\n');
 
-    // Create the prompt for OpenAI
-    const prompt = `Analyze this image and describe what you see. The image contains the following detected objects:
-
-${detectionSummary}
-
-Please provide a detailed description of:
-1. What is displayed in the picture
-2. The context and scene
-3. Any notable details about the detected objects
-4. The overall composition and setting
-
-Be specific and descriptive.`;
+    // Create the prompt for OpenAI using config
+    const prompt = createPrompt(detectionSummary);
 
     // Prepare the request to OpenAI Vision API
     const requestBody = {
-      model: 'gpt-4o',
+      model: OPENAI_MODEL,
       messages: [
         {
           role: 'user',
@@ -140,7 +136,7 @@ Be specific and descriptive.`;
           ]
         }
       ],
-      max_tokens: 500
+      max_tokens: MAX_TOKENS
     };
 
     // Send request to OpenAI
@@ -164,6 +160,9 @@ Be specific and descriptive.`;
 
     const openaiData = await openaiResponse.json();
     const analysis = openaiData.choices[0]?.message?.content || 'No analysis available';
+
+    // Process LLM response before sending it back to the client
+    await llmResponceProcessing(openaiData, analysis, detections, timestamp);
 
     // Return the analysis along with the detection data
     res.json({
@@ -191,4 +190,5 @@ app.listen(PORT, () => {
     console.warn('⚠️  WARNING: OPENAI_API_KEY not set. Please configure it in .env file');
   }
 });
+
 

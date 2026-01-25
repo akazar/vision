@@ -2,10 +2,10 @@
   "name": "vision-api-server",
   "version": "1.0.0",
   "description": "API server for vision detection analysis using OpenAI",
-  "main": "server.js",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
     "check-env": "node check-env.js",
     "fix-env": "node fix-env.js",
     "detect": "node node-app/detect-image.mjs"

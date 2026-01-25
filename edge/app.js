@@ -3,6 +3,7 @@ import { startCamera, stopCamera, resizeOverlay } from './camera.js';
 import { smoothBBox, applyDeadZone } from './smoothing.js';
 import { drawDetections } from './drawing.js';
 import { captureScreenAndData } from './capture.js';
+import { imageRealTimeProcessing } from './middleware.js';
 import { 
   DETECTION_INTERVAL_MS,
   OBJECT_TYPE_OPTIONS,
@@ -101,6 +102,9 @@ async function loop() {
   if (video.currentTime !== lastVideoTime && (nowMs - lastInferTime) >= DETECTION_INTERVAL_MS) {
     lastVideoTime = video.currentTime;
     lastInferTime = nowMs;
+    
+    // Process current frame for further operations (e.g., saving locally)
+    await imageRealTimeProcessing(video);
     
     const result = await detector.detectForVideo(video, nowMs);
     lastDetectionData = drawDetections(

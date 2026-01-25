@@ -1,5 +1,6 @@
 import { API_BASE_URL, DRAWING_STYLES } from './config.js';
 import { roundRect } from './drawing.js';
+import { imageDetectedProcessing, apiResponceProcessing } from './middleware.js';
 
 /**
  * Helper function to download a blob as a file
@@ -131,6 +132,9 @@ export function captureScreenAndData(video, lastDetectionData, statusEl, setRunn
       downloadBlob(jsonBlob, `detection-${timestamp}.json`);
     }
 
+    // Process image and detection data before sending to API
+    await imageDetectedProcessing(rawBlob, jsonData);
+    
     // Send to API
     try {
       statusEl.textContent = "Sending to API...";
@@ -151,6 +155,9 @@ export function captureScreenAndData(video, lastDetectionData, statusEl, setRunn
       }
 
       const result = await response.json();
+
+      // Process API response after receiving it
+      await apiResponceProcessing(result);
       
       // Display the analysis result in the response block
       console.log('Analysis result:', result);
