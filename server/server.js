@@ -69,6 +69,15 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '50mb' }));
 
+// Serve static files from edge directory
+const edgePath = path.join(__dirname, '..', 'edge');
+app.use(express.static(edgePath));
+
+// Serve index.html for root path
+app.get('/', (req, res) => {
+  res.sendFile(path.join(edgePath, 'index.html'));
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 

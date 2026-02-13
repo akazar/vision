@@ -5,9 +5,11 @@ export const BASE_ALPHA = 0.25; // Base alpha for confidence-weighted smoothing
 export const DETECTION_FPS = 12; // Target detection FPS (throttling)
 export const DETECTION_INTERVAL_MS = 1000 / DETECTION_FPS; // ~83ms
 
-// API configuration - update this to match your server URL
-// For production, change this to your deployed server URL
-export const API_BASE_URL = 'http://localhost:3001';
+// API configuration - uses relative URL for production, absolute for development
+// In production (deployed), this will use the same origin as the frontend
+// For local development, set API_BASE_URL to 'http://localhost:3001'
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+export const API_BASE_URL = isProduction ? '' : 'http://localhost:3001';
 
 // MediaPipe model configuration
 export const MODEL_CONFIG = {
