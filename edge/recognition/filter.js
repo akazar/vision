@@ -13,7 +13,7 @@ export function filterDetectionsByType(detections, filterType, objectTypeMap) {
   if (filterType === "all") {
     return detections;
   }
-  
+
   const allowedTypes = objectTypeMap[filterType] || [];
   return detections.filter(det => {
     const cat = det.categories?.[0];
@@ -34,12 +34,11 @@ export function isSelectedObjectTypeDetected(detections, filterType, objectTypeM
   if (filterType === "all") {
     return detections.length > 0;
   }
-  
+
   const allowedTypes = objectTypeMap[filterType] || [];
-  
+
   return detections.some(det => {
     const categoryName = (det.categoryName || "").toLowerCase();
     return allowedTypes.some(type => categoryName.includes(type));
   });
 }
-

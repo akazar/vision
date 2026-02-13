@@ -1,9 +1,8 @@
 const express = require('express');
 const multer = require('multer');
-const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
-const { OPENAI_MODEL, MAX_TOKENS, createPrompt } = require('./config');
+const { analyzeWithLLM } = require('./reasoning');
 const { apiRequestProcessing, apiResponceProcessing } = require('./middleware');
 
 // Load .env file with explicit UTF-8 encoding
@@ -105,89 +104,44 @@ app.post('/api/analyze', upload.single('image'), async (req, res) => {
     const imageBuffer = req.file.buffer;
     const detections = JSON.parse(req.body.detections);
     const timestamp = req.body.timestamp || new Date().toISOString();
-
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ 
-        error: 'OpenAI API key not configured. Please set OPENAI_API_KEY in .env file' 
-      });
-    }
-
-    // Convert image buffer to base64
-    const imageBase64 = imageBuffer.toString('base64');
     const imageMimeType = req.file.mimetype || 'image/jpeg';
 
-    // Format detection data for the prompt
-    const detectionSummary = detections.map(det => 
-      `${det.categoryName} (${(det.score * 100).toFixed(0)}% confidence) at position [${det.x}, ${det.y}] with size ${det.width}×${det.height}`
-    ).join('\n');
-
-    // Create the prompt for OpenAI using config
-    const prompt = createPrompt(detectionSummary);
-
-    // Prepare the request to OpenAI Vision API
-    const requestBody = {
-      model: OPENAI_MODEL,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: prompt
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: `data:${imageMimeType};base64,${imageBase64}`
-              }
-            }
-          ]
-        }
-      ],
-      max_tokens: MAX_TOKENS
-    };
-
-    // Send request to OpenAI
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error('OpenAI API Error:', errorText);
-      return res.status(openaiResponse.status).json({ 
-        error: 'OpenAI API request failed',
-        details: errorText 
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        error: 'OpenAI API key not configured. Please set OPENAI_API_KEY in .env file'
       });
     }
 
-    const openaiData = await openaiResponse.json();
-    const analysis = openaiData.choices[0]?.message?.content || 'No analysis available';
+    const { analysis, model, usage, raw: openaiData } = await analyzeWithLLM(
+      imageBuffer,
+      imageMimeType,
+      detections,
+      timestamp,
+      process.env.OPENAI_API_KEY
+    );
 
-    // Process LLM response before sending it back to the client
     await apiResponceProcessing(openaiData, analysis, detections, timestamp);
 
-    // Return the analysis along with the detection data
     res.json({
       success: true,
       timestamp,
       detections,
       analysis,
-      model: openaiData.model,
-      usage: openaiData.usage
+      model,
+      usage
     });
 
   } catch (error) {
     console.error('Error processing request:', error);
-    res.status(500).json({ 
+    if (error.status && error.details) {
+      return res.status(error.status).json({
+        error: 'OpenAI API request failed',
+        details: error.details
+      });
+    }
+    res.status(500).json({
       error: 'Internal server error',
-      message: error.message 
+      message: error.message
     });
   }
 });

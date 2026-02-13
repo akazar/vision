@@ -1,18 +1,16 @@
-import { initDetector } from './detector.js';
-import { startCamera, stopCamera, resizeOverlay } from './camera.js';
-import { smoothBBox, applyDeadZone } from './smoothing.js';
-import { drawDetections } from './drawing.js';
-import { captureScreenAndData } from './capture.js';
-import { imageRealTimeProcessing } from './middleware.js';
-import { 
-  DETECTION_INTERVAL_MS,
+import { initDetector, isSelectedObjectTypeDetected } from './recognition/index.js';
+import { startCamera, stopCamera, resizeOverlay, imageRealTimeProcessing, downloadBlob, captureScreenToBlobAndData } from './capture/index.js';
+import { smoothBBox, applyDeadZone, drawDetections } from './boxes/index.js';
+import { requestAnalysis } from './reasoning/index.js';
+import { imageDetectedProcessing, apiResponceProcessing, handleAnalysisResponse, handleAnalysisError } from './actions/index.js';
+import { DETECTION_INTERVAL_MS } from './recognition/config.js';
+import {
   OBJECT_TYPE_OPTIONS,
   DEFAULT_OBJECT_TYPE,
   AUTO_CAPTURE_INTERVAL_OPTIONS,
   DEFAULT_AUTO_CAPTURE_INTERVAL,
   OBJECT_TYPE_MAP
 } from './config.js';
-import { isSelectedObjectTypeDetected } from './filter.js';
 
 // DOM elements
 const startBtn = document.getElementById("startBtn");
@@ -258,7 +256,7 @@ function checkObjectDetectionForAutoCapture(nowMs) {
     if (nowMs - lastCaptureTime >= intervalMs) {
       lastCaptureTime = nowMs;
       const shouldDownload = downloadImagesCheckbox ? downloadImagesCheckbox.checked : false;
-      captureScreenAndData(video, lastDetectionData, statusEl, () => {
+      runCaptureAndAnalyze(video, lastDetectionData, statusEl, () => {
         if (running) statusEl.textContent = "Detection active";
       }, shouldDownload);
       
@@ -308,6 +306,35 @@ function stopAutoCapture() {
   lastObjectDetected = false;
   currentDetectionStart = null;
   lastCaptureTime = 0;
+}
+
+/**
+ * Captures screen to blob + JSON, optionally downloads, then sends to API and handles response.
+ */
+async function runCaptureAndAnalyze(video, lastDetectionData, statusEl, setRunningStatus, shouldDownload = false) {
+  if (!video || video.readyState < 2) {
+    statusEl.textContent = "Camera not ready";
+    return;
+  }
+  try {
+    const { rawBlob, jsonData } = await captureScreenToBlobAndData(video, lastDetectionData);
+    const timestamp = jsonData.timestamp.replace(/[:.]/g, "-").slice(0, -5);
+
+    if (shouldDownload) {
+      downloadBlob(rawBlob, `raw-${timestamp}.jpg`);
+      const jsonBlob = new Blob([JSON.stringify(jsonData, null, 2)], { type: "application/json" });
+      downloadBlob(jsonBlob, `detection-${timestamp}.json`);
+    }
+
+    await imageDetectedProcessing(rawBlob, jsonData);
+    statusEl.textContent = "Sending to API...";
+
+    const result = await requestAnalysis(rawBlob, jsonData);
+    await apiResponceProcessing(result);
+    handleAnalysisResponse(result, statusEl, setRunningStatus);
+  } catch (error) {
+    handleAnalysisError(error, statusEl, setRunningStatus);
+  }
 }
 
 // Initialize select options from config
@@ -390,7 +417,7 @@ if (switchBtn) {
 
 captureBtn.addEventListener("click", () => {
   const shouldDownload = downloadImagesCheckbox ? downloadImagesCheckbox.checked : false;
-  captureScreenAndData(video, lastDetectionData, statusEl, () => {
+  runCaptureAndAnalyze(video, lastDetectionData, statusEl, () => {
     if (running) statusEl.textContent = "Detection active";
   }, shouldDownload);
 });

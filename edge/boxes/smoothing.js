@@ -1,4 +1,4 @@
-import { BASE_ALPHA, DEAD_ZONE_EPS } from './config.js';
+import { BASE_ALPHA, DEAD_ZONE_EPS } from '../recognition/config.js';
 
 /**
  * Smooths a bounding box using Exponential Moving Average (EMA)
@@ -15,11 +15,10 @@ export function smoothBBox(smoothBoxes, key, bbox, confidence = 0.5) {
   }
 
   const prev = smoothBoxes.get(key);
-  
-  // Confidence-weighted smoothing: low confidence = smoother, high confidence = more responsive
+
   const dynamicAlpha = BASE_ALPHA + confidence * 0.4;
   const alpha = Math.max(0.1, Math.min(0.9, dynamicAlpha));
-  
+
   const next = {
     x: prev.x + alpha * (bbox.x - prev.x),
     y: prev.y + alpha * (bbox.y - prev.y),
@@ -46,4 +45,3 @@ export function applyDeadZone(prev, curr, eps = DEAD_ZONE_EPS) {
     h: Math.abs(curr.h - prev.h) < eps ? prev.h : curr.h,
   };
 }
-

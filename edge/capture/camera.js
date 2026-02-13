@@ -49,4 +49,3 @@ export function resizeOverlay(canvas, video, ctx) {
   canvas.style.height = rect.height + "px";
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
 }
-

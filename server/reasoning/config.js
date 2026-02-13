@@ -1,8 +1,7 @@
 /**
- * Server configuration for OpenAI API
+ * Cloud LLM provider (OpenAI) configuration
  */
 
-// OpenAI model configuration
 exports.OPENAI_MODEL = 'gpt-4o';
 exports.MAX_TOKENS = 500;
 
@@ -24,4 +23,3 @@ Please provide a detailed description of:
 
 Be specific and descriptive.`;
 };
-
