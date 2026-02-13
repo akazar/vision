@@ -1,97 +1,146 @@
 # Vision Detection with OpenAI Analysis
 
-This project consists of two parts:
-1. **Frontend** (edge/): A web application using MediaPipe for real-time object detection
-2. **Backend** (server.js): A Node.js API server that receives images and detection data, then sends them to OpenAI for analysis
+Real-time object detection in the browser (MediaPipe) with optional cloud LLM analysis (OpenAI Vision). The backend serves the frontend and provides an `/api/analyze` endpoint that sends images and detection data to OpenAI.
+
+## Overview
+
+- **Frontend (edge/)**  
+  Browser app: camera stream, local object detection, bounding boxes, capture, and optional auto-capture. Sends image + detections to the backend for analysis.
+
+- **Backend (server/)**  
+  Express server that serves the edge app and exposes `/api/analyze`. Uses a **reasoning** module (cloud LLM config + OpenAI Vision call) and **middleware** for request/response hooks.
+
+## Architecture
+
+### Edge (frontend) – thematic folders
+
+| Folder        | Role |
+|---------------|------|
+| **capture/**  | Camera (start/stop/resize), frame processing, screen capture to blob + JSON, download. |
+| **boxes/**    | Drawing bounding boxes, smoothing (EMA + dead zone), viewport mapping. |
+| **recognition/** | Local object detection (MediaPipe detector), detection config (FPS, model, smoothing params), filter by object type. |
+| **reasoning/**  | Client-side: `requestAnalysis(blob, jsonData)` → `POST /api/analyze`. |
+| **actions/**   | Pre/post API hooks (`imageDetectedProcessing`, `apiResponceProcessing`) and UI handling of analysis result/error. |
+
+- **edge/config.js** – API base URL, object type options, drawing styles, auto-capture options (no detection/LLM config; that lives in `recognition/` and server `reasoning/`).
+
+### Server (backend)
+
+| Path | Role |
+|------|------|
+| **server.js** | Express app, static serving of `edge/`, `/` and `/health`, `/api/analyze` route. Loads `.env`, uses `reasoning` and `middleware`. |
+| **reasoning/** | Cloud LLM: **config.js** (model, max_tokens, prompt builder), **analyze.js** (`analyzeWithLLM` → OpenAI Vision API). |
+| **middleware.js** | `apiRequestProcessing`, `apiResponceProcessing` (hooks around the analyze flow). |
+
+Flow: request → multer → `apiRequestProcessing` → `reasoning.analyzeWithLLM` → `apiResponceProcessing` → JSON response.
+
+### File structure (high level)
+
+```
+vision/
+├── edge/                    # Frontend (static, served by server)
+│   ├── app.js               # Entry, detection loop, UI, runCaptureAndAnalyze
+│   ├── config.js            # API URL, UI/drawing/object-type config
+│   ├── index.html
+│   ├── styles.css
+│   ├── capture/             # Camera + screen capture
+│   ├── boxes/               # Drawing + smoothing
+│   ├── recognition/         # Detector + filter + detection config
+│   ├── reasoning/           # Client: requestAnalysis
+│   └── actions/             # API response handling + hooks
+├── server/
+│   ├── server.js            # Express, routes, static
+│   ├── middleware.js        # Request/response hooks
+│   └── reasoning/           # Cloud LLM config + analyzeWithLLM
+├── .env                     # OPENAI_API_KEY, PORT (not committed)
+├── package.json
+└── README.md
+```
 
 ## Setup
 
-### Backend Setup
+### 1. Install and env
 
-1. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Create a `.env` file in the root directory:
+Create a `.env` in the project root:
+
 ```
-OPENAI_API_KEY=your_openai_api_key_here
-PORT=3000
+OPENAI_API_KEY=sk-your-key-here
+PORT=3001
 ```
 
-3. Start the server:
+Get an API key from [OpenAI API keys](https://platform.openai.com/api-keys).
+
+### 2. Run
+
 ```bash
 npm start
 ```
 
-Or for development with auto-reload:
+- Server: `http://localhost:3001` (or your `PORT`).
+- Frontend: open `http://localhost:3001` (server serves `edge/` and `index.html` at `/`).
+- No separate frontend server: the Node server serves the edge app.
+
+Development with auto-reload:
+
 ```bash
 npm run dev
 ```
 
-The server will run on `http://localhost:3000` by default.
+### 3. Use the app
 
-### Frontend Setup
+1. Open `http://localhost:3001` in a browser (HTTPS required for camera in production).
+2. Allow camera access.
+3. Click ▶ to start detection.
+4. Use 📷 to capture and send the current frame + detections for OpenAI analysis.
+5. Optional: enable auto-capture and “Download images on detection” in settings (⚙).
 
-1. Update the API URL in `edge/script.js` if your server is running on a different URL:
-```javascript
-const API_BASE_URL = 'http://localhost:3000'; // or your server URL
-```
-
-2. Serve the frontend files using a local web server (required for camera access):
-```bash
-# Using Python
-python -m http.server 8000
-
-# Using Node.js http-server
-npx http-server -p 8000
-
-# Using PHP
-php -S localhost:8000
-```
-
-3. Open `http://localhost:8000/edge/index.html` in your browser
-
-## Usage
-
-1. Open the web application in your browser
-2. Click the "Start" button (▶) to initialize detection
-3. Point your camera at objects
-4. Click the capture button (📷) to:
-   - Capture the current frame
-   - Send image and detection data to the API
-   - Receive OpenAI's analysis of what's in the image
-
-## API Endpoints
+## API
 
 ### POST /api/analyze
 
-Receives an image file and detection JSON, sends to OpenAI for analysis.
+Accepts multipart form data:
 
-**Request:**
-- `image`: Image file (multipart/form-data)
-- `detections`: JSON string of detection data
-- `timestamp`: ISO timestamp string
+- `image` – image file (e.g. JPG)
+- `detections` – JSON string of detection array
+- `timestamp` – ISO string
 
-**Response:**
+Returns JSON:
+
 ```json
 {
   "success": true,
-  "timestamp": "2024-01-15T10:30:45.123Z",
+  "timestamp": "...",
   "detections": [...],
-  "analysis": "OpenAI's description of the image",
+  "analysis": "OpenAI description of the image",
   "model": "gpt-4o",
-  "usage": {...}
+  "usage": { ... }
 }
 ```
 
 ### GET /health
 
-Health check endpoint.
+Health check; includes `apiKeyConfigured` and `port`.
+
+## Deployment (e.g. Render)
+
+1. Connect the repo to Render and create a **Web Service**.
+2. **Build**: `npm install`  
+   **Start**: `npm start`  
+   **Root**: project root.
+3. **Environment**: set `OPENAI_API_KEY`. Optionally set `PORT` (Render often sets it automatically).
+4. Frontend is served at `/`; use HTTPS so the camera works.
+
+Notes:
+
+- Do not commit `.env`; set secrets in the Render dashboard.
+- On free tier, the service may spin down after inactivity; first request can be slow.
 
 ## Requirements
 
-- Node.js 14+ for the backend
-- Modern browser with camera access for the frontend
-- OpenAI API key
-
+- Node.js 14+
+- Modern browser with camera access (for detection/capture)
+- OpenAI API key (for analysis)
