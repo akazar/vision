@@ -3,7 +3,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { analyzeWithLLM } = require('./reasoning');
-const { apiRequestProcessing, apiResponceProcessing } = require('./middleware');
+const { apiRequestProcessing, apiResponceProcessing } = require('./actions');
 
 // Load .env file with explicit UTF-8 encoding
 // .env file is in the parent directory (project root)

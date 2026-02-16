@@ -1,4 +1,8 @@
 /**
+ * Actions: processing hooks for API requests and responses.
+ */
+
+/**
  * Processes the API request after receiving it from the client
  * Can modify the request data for further processing
  * @param {Object} req - Express request object containing file and body data
@@ -62,4 +66,3 @@ module.exports = {
   apiRequestProcessing,
   apiResponceProcessing
 };
-
