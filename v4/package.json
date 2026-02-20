@@ -6,12 +6,16 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
-    "dev": "node server/server.js"
+    "dev": "node server/server.js",
+    "recognize": "node server/server-recognition.js",
+    "postinstall": "playwright install chromium"
   },
   "keywords": ["vision", "object-detection", "openai", "camera"],
   "license": "ISC",
   "dependencies": {
+    "canvas": "^3.0.0",
     "express": "^4.18.2",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "playwright": "^1.49.0"
   }
 }

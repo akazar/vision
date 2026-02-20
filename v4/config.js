@@ -18,6 +18,7 @@ const CONFIG = {
         baseUrl: 'http://localhost:3001',
         describePrompt: 'Describe this image in detail. What objects, people, or scene do you see?'
     },
+    downloadResultImage: true,
     boundingBoxStyles: {
         strokeStyle: '#00FFAA',
         lineWidth: 3,
