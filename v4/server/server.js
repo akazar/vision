@@ -55,21 +55,102 @@ if (fs.existsSync(envPath)) {
   try { require('dotenv').config({ path: envPath }); } catch (_) {}
 }
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+/**
+ * Sets up server logic (API endpoints, middleware) for the Express app
+ * @param {Express} app - Express application instance
+ */
+export function setupServerLogic(app) {
+  // CORS
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') return res.sendStatus(200);
+    next();
+  });
 
-// v4 root (config.js, lib/*.js, etc.) for module imports – served at /
-const v4Root = path.join(__dirname, '..');
-// Camera-stream client – served at /camera-stream
-const cameraStreamPath = path.join(__dirname, '..', 'client', 'camera-stream');
+  app.use(express.json({ limit: '50mb' }));
 
-if (process.env.OPENAI_API_KEY) {
-  const keyPreview = process.env.OPENAI_API_KEY.substring(0, 7) + '...' + process.env.OPENAI_API_KEY.slice(-4);
-  console.log('✓ OPENAI_API_KEY loaded:', keyPreview);
-} else {
-  console.warn('⚠️  OPENAI_API_KEY not set. Set it in .env for /api/describe');
+  // Health check
+  app.get('/health', (req, res) => {
+    res.json({
+      status: 'ok',
+      message: 'v4 server running',
+      apiKeyConfigured: !!process.env.OPENAI_API_KEY,
+      port: process.env.PORT || 3001
+    });
+  });
+
+  // Describe image (used by v4 config action) – OpenAI key from .env
+  app.post('/api/describe', async (req, res) => {
+    try {
+      const { image, prompt } = req.body || {};
+      if (!image || typeof image !== 'string') {
+        return res.status(400).json({ error: 'Missing or invalid "image" (base64 data URL)' });
+      }
+
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({
+          error: 'OpenAI API key not configured. Set OPENAI_API_KEY in .env'
+        });
+      }
+
+      const describePrompt = prompt || 'Describe this image in detail.';
+      const requestBody = {
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: describePrompt },
+              { type: 'image_url', image_url: { url: image } }
+            ]
+          }
+        ],
+        max_tokens: 500
+      };
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        return res.status(response.status).json({
+          error: 'OpenAI API request failed',
+          details: errText
+        });
+      }
+
+      const data = await response.json();
+      const description = data.choices?.[0]?.message?.content || 'No description';
+      lastReasoningResult = description;
+      if (REASONING_SERVER_ACTION_FUNCTIONS.length > 0) {
+        await serverAction(description, REASONING_SERVER_ACTION_FUNCTIONS);
+      }
+
+      res.json({
+        success: true,
+        description,
+        model: data.model,
+        usage: data.usage
+      });
+    } catch (error) {
+      console.error('Error in /api/describe:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: error.message
+      });
+    }
+  });
 }
 
+// Initialize server action intervals
 if (REGULAR_SERVER_ACTION_FUNCTIONS.length > 0) {
   REGULAR_SERVER_ACTION_FUNCTIONS.forEach(funcObj => {
     const run = async () => {
@@ -78,127 +159,3 @@ if (REGULAR_SERVER_ACTION_FUNCTIONS.length > 0) {
     setInterval(run, funcObj.intervalMs);
   });
 }
-
-// CORS
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
-
-app.use(express.json({ limit: '50mb' }));
-
-// Landing page at root
-const clientPath = path.join(__dirname, '..', 'client');
-app.get('/', (req, res) => {
-  res.sendFile(path.join(clientPath, 'index.html'));
-});
-
-// v4 root (config.js, lib/, etc.) at / for module imports from both clients
-// This must come before client static to ensure module imports work
-app.use(express.static(v4Root));
-
-// Serve client static files (styles.css for landing page)
-// This serves files from client folder but won't override specific routes above
-app.use(express.static(clientPath));
-
-// Camera-stream client at /camera-stream
-app.use('/camera-stream', express.static(cameraStreamPath));
-app.get('/camera-stream', (req, res) => {
-  res.sendFile(path.join(cameraStreamPath, 'index.html'));
-});
-app.get('/camera-stream/', (req, res) => {
-  res.sendFile(path.join(cameraStreamPath, 'index.html'));
-});
-
-// Image upload client
-const imageUploadPath = path.join(__dirname, '..', 'client', 'image-upload');
-app.use('/image-upload', express.static(imageUploadPath));
-app.get('/image-upload', (req, res) => {
-  res.sendFile(path.join(imageUploadPath, 'index.html'));
-});
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'v4 server running',
-    apiKeyConfigured: !!process.env.OPENAI_API_KEY,
-    port: PORT
-  });
-});
-
-// Describe image (used by v4 config action) – OpenAI key from .env
-app.post('/api/describe', async (req, res) => {
-  try {
-    const { image, prompt } = req.body || {};
-    if (!image || typeof image !== 'string') {
-      return res.status(400).json({ error: 'Missing or invalid "image" (base64 data URL)' });
-    }
-
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({
-        error: 'OpenAI API key not configured. Set OPENAI_API_KEY in .env'
-      });
-    }
-
-    const describePrompt = prompt || 'Describe this image in detail.';
-    const requestBody = {
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: describePrompt },
-            { type: 'image_url', image_url: { url: image } }
-          ]
-        }
-      ],
-      max_tokens: 500
-    };
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      return res.status(response.status).json({
-        error: 'OpenAI API request failed',
-        details: errText
-      });
-    }
-
-    const data = await response.json();
-    const description = data.choices?.[0]?.message?.content || 'No description';
-    lastReasoningResult = description;
-    if (REASONING_SERVER_ACTION_FUNCTIONS.length > 0) {
-      await serverAction(description, REASONING_SERVER_ACTION_FUNCTIONS);
-    }
-
-    res.json({
-      success: true,
-      description,
-      model: data.model,
-      usage: data.usage
-    });
-  } catch (error) {
-    console.error('Error in /api/describe:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: error.message
-    });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`v4 server running at http://localhost:${PORT}`);
-  console.log(`Health: http://localhost:${PORT}/health`);
-});

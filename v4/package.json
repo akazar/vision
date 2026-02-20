@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Vision v4 app: camera stream, object recognition, bounding boxes, and OpenAI describe",
-  "main": "server/server.js",
+  "main": "server/main.js",
   "scripts": {
-    "start": "node server/server.js",
-    "dev": "node server/server.js",
+    "start": "node server/main.js",
+    "dev": "node server/main.js",
     "recognize": "node server/server-recognition.js",
     "postinstall": "playwright install chromium"
   },

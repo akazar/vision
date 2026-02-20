@@ -119,12 +119,12 @@ const CONFIG = {
         }
     ],
     serverRegularActionFunctions: [
-        {
-            func: (description) => {
-                console.log('[Server Regular Action] Description:', description);
-            },
-            intervalMs: 15000
-        }
+        // {
+        //     func: (description) => {
+        //         console.log('[Server Regular Action] Description:', description);
+        //     },
+        //     intervalMs: 15000
+        // }
     ],
 };
 
