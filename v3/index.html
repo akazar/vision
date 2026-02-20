@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vision Recognition</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    #videoBackground {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    #overlayCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    #controlButton {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      padding: 15px 40px;
+      font-size: 18px;
+      font-weight: bold;
+      background: rgba(0, 255, 170, 0.9);
+      color: #000;
+      border: 2px solid #00FFAA;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    #controlButton:hover {
+      background: rgba(0, 255, 170, 1);
+      transform: translateX(-50%) scale(1.05);
+    }
+
+    #controlButton:active {
+      transform: translateX(-50%) scale(0.95);
+    }
+
+    #controlButton:disabled {
+      background: rgba(128, 128, 128, 0.5);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    #reasoningPanel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    #reasoningPanel.visible {
+      display: flex;
+    }
+
+    #reasoningContent {
+      max-width: 800px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    #closeReasoning {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    #closeReasoning:hover {
+      background: rgba(255, 0, 0, 1);
+      transform: scale(1.1);
+    }
+
+    #reasoningTitle {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    #reasoningText {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #444;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    #reasoningLoading {
+      text-align: center;
+      padding: 40px;
+      color: #00FFAA;
+      font-size: 18px;
+    }
+
+    #statusIndicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+      padding: 10px 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #00FFAA;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <video id="videoBackground" autoplay playsinline></video>
+  <canvas id="overlayCanvas"></canvas>
+  
+  <div id="statusIndicator">Initializing...</div>
+  
+  <button id="controlButton" disabled>Analyze</button>
+  
+  <div id="reasoningPanel">
+    <div id="reasoningContent">
+      <button id="closeReasoning">×</button>
+      <div id="reasoningTitle">Reasoning Results</div>
+      <div id="reasoningLoading" style="display: none;">Sending to server...</div>
+      <div id="reasoningText"></div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/"
+      }
+    }
+  </script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>

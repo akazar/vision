@@ -1,0 +1,17 @@
+{
+  "name": "vision-v4",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Vision v4 app: camera stream, object recognition, bounding boxes, and OpenAI describe",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  },
+  "keywords": ["vision", "object-detection", "openai", "camera"],
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^2.7.0"
+  }
+}

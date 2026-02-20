@@ -1,32 +1,39 @@
+/**
+ * Edge Pipeline - Main workflow implementation with UI
+ * 
+ * Workflow:
+ * 1. Capture: Device camera captures photo/video frame
+ * 2. Edge Detection: Local model identifies objects with confidence scores
+ * 3. Threshold Check: If confidence passes threshold, proceed
+ * 4. Local Action (Optional): Immediate robot/API call for time-sensitive tasks
+ * 5. Reasoning (Optional): Send image + detection data to cloud for LLM analysis
+ * 6. Final Action: Based on reasoning, send notifications, log data, or trigger services
+ */
+
 // Capture
-import {
-  startCamera,
-  stopCamera,
-  resizeOverlay,
-  imageRealTimeProcessing,
-  downloadBlob,
-  captureScreenToBlobAndData
-} from './capture/index.js';
+import { startCamera, stopCamera, resizeOverlay } from '../edge/capture/camera.js';
+import { imageRealTimeProcessing } from '../edge/capture/frame.js';
+import { downloadBlob, captureScreenToBlobAndData } from '../edge/capture/screen.js';
 
 // Boxes
-import { smoothBBox, applyDeadZone, drawDetections } from './boxes/index.js';
+import { smoothBBox, applyDeadZone, drawDetections } from '../edge/boxes/index.js';
 
 // Recognition
-import { initDetector, isSelectedObjectTypeDetected } from './recognition/index.js';
-import { DETECTION_INTERVAL_MS } from './recognition/config.js';
+import { initDetector, isSelectedObjectTypeDetected } from '../edge/recognition/index.js';
+import { DETECTION_INTERVAL_MS } from '../edge/recognition/config.js';
 
 // Reasoning
-import { requestAnalysis } from './reasoning/index.js';
+import { requestAnalysis } from '../edge/reasoning/index.js';
 
 // Actions
-import { imageDetectedProcessing, apiResponceProcessing } from './actions/index.js';
+import { imageDetectedProcessing, apiResponceProcessing } from '../edge/actions/index.js';
 
 // Config
 import {
   DEFAULT_OBJECT_TYPE,
   DEFAULT_AUTO_CAPTURE_INTERVAL,
   OBJECT_TYPE_MAP
-} from './config.js';
+} from '../edge/config.js';
 
 // UI
 import {
@@ -44,7 +51,14 @@ import {
   setupEventHandlers,
   handleAnalysisResponse,
   handleAnalysisError
-} from './ui/index.js';
+} from '../edge/ui/index.js';
+
+// Configuration
+const DEFAULT_THRESHOLD = 0.5;
+const DEFAULT_CLASSES = []; // Empty array means detect all classes
+const API_BASE_URL = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' 
+  ? '' 
+  : 'http://localhost:3001';
 
 // DOM elements
 const video = document.getElementById("video");
@@ -81,7 +95,6 @@ let autoCaptureTimer = null;
 let autoCaptureIntervalSeconds = DEFAULT_AUTO_CAPTURE_INTERVAL;
 
 // Object detection tracking for auto-capture
-// Track detection periods within a sliding window
 let detectionPeriods = []; // Array of {start, end} periods when object was detected
 let lastObjectDetected = false; // Whether the object was detected in the last frame
 let currentDetectionStart = null; // Start time of current detection period
@@ -90,10 +103,13 @@ let lastCaptureTime = 0; // When we last triggered capture (to prevent rapid re-
 // Temporal smoothing state
 const smoothBoxes = new Map(); // key -> smoothed bbox {x, y, w, h}
 
+// Animation frame ID for canceling the loop
+let animationFrameId = null;
+
 // Initialize detector
 async function initializeDetector() {
   setStatus("Loading model…");
-  detector = await initDetector(); // initialize the detector with the default model configuration from the config.js file
+  detector = await initDetector();
   setStatus("Model ready");
 }
 
@@ -119,8 +135,117 @@ function stopCameraStream() {
   }
 }
 
-// Animation frame ID for canceling the loop
-let animationFrameId = null;
+/**
+ * Capture: Get the video stream from device camera
+ * @param {HTMLVideoElement} videoElement - Video element to display camera feed (optional, uses DOM video if not provided)
+ * @param {string} facingModeParam - Camera facing mode ("environment" or "user")
+ * @returns {Promise<MediaStream>} Camera stream
+ */
+export async function capture(videoElement = null, facingModeParam = null) {
+  if (videoElement) {
+    // Use provided video element
+    if (stream) stopCamera(stream);
+    
+    const constraints = {
+      audio: false,
+      video: {
+        facingMode: facingModeParam || "environment",
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    };
+
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    videoElement.srcObject = stream;
+
+    await new Promise((resolve) => {
+      videoElement.onloadedmetadata = () => resolve();
+    });
+
+    return stream;
+  } else {
+    // Use DOM video element
+    await initializeCamera();
+    return stream;
+  }
+}
+
+/**
+ * Snap: Get screenshot from video stream
+ * @param {MediaStream} streamParam - Video stream from capture() (optional, uses stored stream)
+ * @param {HTMLVideoElement} videoElementParam - Video element (optional, uses DOM video)
+ * @returns {Promise<{blob: Blob, canvas: HTMLCanvasElement}>} Screenshot blob and canvas
+ */
+export async function snap(streamParam = null, videoElementParam = null) {
+  const videoEl = videoElementParam || video;
+  const streamToUse = streamParam || stream;
+  
+  if (!videoEl || !streamToUse || videoEl.readyState < 2) {
+    throw new Error("Camera not ready");
+  }
+
+  const canvasEl = await imageRealTimeProcessing(videoEl);
+  if (!canvasEl) {
+    throw new Error("Failed to capture frame");
+  }
+
+  return new Promise((resolve, reject) => {
+    canvasEl.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Failed to create blob"));
+        return;
+      }
+      resolve({ blob, canvas: canvasEl });
+    }, "image/jpeg", 0.95);
+  });
+}
+
+/**
+ * Scheduler: Manually or interval-based snapshot capture
+ * @param {number|null} interval - Interval in seconds (null for manual mode)
+ * @param {MediaStream} stream - Video stream from capture()
+ * @param {Function} callback - Callback function to receive snapshots
+ * @returns {Function} Stop function to cancel the scheduler
+ */
+export function scheduler(interval, stream, callback) {
+  let timerId = null;
+
+  const captureSnapshot = async () => {
+    try {
+      const { blob, canvas } = await snap(stream);
+      if (callback) {
+        await callback({ blob, canvas });
+      }
+    } catch (error) {
+      console.error("Error capturing snapshot:", error);
+    }
+  };
+
+  if (interval === null || interval === 0) {
+    // Manual mode - return function to trigger capture
+    return {
+      trigger: captureSnapshot,
+      stop: () => {}
+    };
+  } else {
+    // Interval mode
+    const intervalMs = interval * 1000;
+    timerId = setInterval(captureSnapshot, intervalMs);
+    
+    // Also capture immediately
+    captureSnapshot();
+
+    return {
+      trigger: captureSnapshot,
+      stop: () => {
+        if (timerId) {
+          clearInterval(timerId);
+          timerId = null;
+        }
+      }
+    };
+  }
+}
 
 // Main detection loop
 async function loop() {
@@ -222,7 +347,7 @@ async function startDetection() {
 
 /**
  * Checks if the selected object type is detected and tracks duration
- * Triggers capture when object is detected for more than 80% of the interval (allowing interruptions)
+ * Triggers capture when object is detected for more than 80% of the interval
  */
 function checkObjectDetectionForAutoCapture(nowMs) {
   const intervalSeconds = getAutoCaptureInterval();
@@ -241,16 +366,12 @@ function checkObjectDetectionForAutoCapture(nowMs) {
   const isObjectDetected = isSelectedObjectTypeDetected(lastDetectionData, selectedObjectType, OBJECT_TYPE_MAP);
   
   if (isObjectDetected) {
-    // Object is detected
     if (!lastObjectDetected) {
-      // Object just appeared - start a new detection period
       currentDetectionStart = nowMs;
     }
     lastObjectDetected = true;
   } else {
-    // Object is not detected
     if (lastObjectDetected) {
-      // Object just disappeared - end the current detection period
       if (currentDetectionStart !== null) {
         detectionPeriods.push({
           start: currentDetectionStart,
@@ -269,7 +390,6 @@ function checkObjectDetectionForAutoCapture(nowMs) {
   // Calculate total detection time within the window
   let totalDetectionTime = 0;
   
-  // Add completed periods
   for (const period of detectionPeriods) {
     const periodStart = Math.max(period.start, windowStart);
     const periodEnd = Math.min(period.end, nowMs);
@@ -278,7 +398,6 @@ function checkObjectDetectionForAutoCapture(nowMs) {
     }
   }
   
-  // Add current detection period if object is currently detected
   if (currentDetectionStart !== null) {
     const currentStart = Math.max(currentDetectionStart, windowStart);
     const currentEnd = nowMs;
@@ -289,7 +408,6 @@ function checkObjectDetectionForAutoCapture(nowMs) {
 
   // Check if total detection time exceeds 80% threshold
   if (totalDetectionTime >= thresholdMs) {
-    // Prevent rapid re-triggers (wait at least intervalMs between captures)
     if (nowMs - lastCaptureTime >= intervalMs) {
       lastCaptureTime = nowMs;
       const shouldDownload = getDownloadImagesChecked();
@@ -297,17 +415,10 @@ function checkObjectDetectionForAutoCapture(nowMs) {
         if (running) setStatus("Detection active");
       }, shouldDownload);
       
-      // Reset the window start time to allow continuous tracking
-      // Keep current detection if object is still detected, but reset completed periods
-      // This allows the system to continue tracking and trigger again
       const newWindowStart = nowMs - intervalMs;
-      
-      // Keep only periods that are still within the new window
       detectionPeriods = detectionPeriods.filter(period => period.end >= newWindowStart);
       
-      // If currently detecting, adjust the start time to be within the new window
       if (currentDetectionStart !== null) {
-        // If current detection started before the new window, adjust it
         if (currentDetectionStart < newWindowStart) {
           currentDetectionStart = newWindowStart;
         }
@@ -316,16 +427,13 @@ function checkObjectDetectionForAutoCapture(nowMs) {
   }
 }
 
-// Use shared detection filter function
-
-// Auto-capture functionality (now handled by checkObjectDetectionForAutoCapture)
+// Auto-capture functionality
 function startAutoCapture() {
-  stopAutoCapture(); // Clear any existing timer
+  stopAutoCapture();
   
   const intervalSeconds = getAutoCaptureInterval();
   if (intervalSeconds > 0) {
     autoCaptureIntervalSeconds = intervalSeconds;
-    // Reset tracking when starting
     detectionPeriods = [];
     lastObjectDetected = false;
     currentDetectionStart = null;
@@ -348,13 +456,13 @@ function stopAutoCapture() {
 /**
  * Captures screen to blob + JSON, optionally downloads, then sends to API and handles response.
  */
-async function runCaptureAndAnalyze(video, lastDetectionData, setRunningStatus, shouldDownload = false) {
-  if (!video || video.readyState < 2) {
+async function runCaptureAndAnalyze(videoEl, lastDetectionDataParam, setRunningStatus, shouldDownload = false) {
+  if (!videoEl || videoEl.readyState < 2) {
     setStatus("Camera not ready");
     return;
   }
   try {
-    const { rawBlob, jsonData } = await captureScreenToBlobAndData(video, lastDetectionData);
+    const { rawBlob, jsonData } = await captureScreenToBlobAndData(videoEl, lastDetectionDataParam);
     const timestamp = jsonData.timestamp.replace(/[:.]/g, "-").slice(0, -5);
 
     if (shouldDownload) {
@@ -372,6 +480,181 @@ async function runCaptureAndAnalyze(video, lastDetectionData, setRunningStatus, 
   } catch (error) {
     handleAnalysisError(error, setRunningStatus);
   }
+}
+
+/**
+ * Recognize: Detect objects in image with threshold check
+ * @param {HTMLVideoElement|HTMLCanvasElement|Blob} image - Video element (preferred), canvas, or blob
+ * @param {Array<string>} classes - Array of class names to detect (empty = all)
+ * @param {number} threshold - Confidence threshold (0-1)
+ * @returns {Promise<Array>} Recognition results array with class, coordinates, size, confidence, and image
+ */
+export async function recognize(image, classes = DEFAULT_CLASSES, threshold = DEFAULT_THRESHOLD) {
+  if (!detector) {
+    await initializeDetector();
+  }
+
+  let videoElementForDetection = null;
+
+  // Handle different input types
+  if (image instanceof HTMLVideoElement) {
+    videoElementForDetection = image;
+  } else if (image instanceof Blob || image instanceof HTMLCanvasElement) {
+    // Use DOM video element for detection
+    videoElementForDetection = video;
+  } else {
+    throw new Error("Image must be a video element, canvas, or blob");
+  }
+
+  if (!videoElementForDetection || !(videoElementForDetection instanceof HTMLVideoElement)) {
+    throw new Error("Video element required for detection. Call capture() first to initialize the camera, or pass a video element directly.");
+  }
+
+  // Run detection using detectForVideo (VIDEO mode)
+  const nowMs = performance.now();
+  const result = await detector.detectForVideo(videoElementForDetection, nowMs);
+  const detections = result.detections || [];
+  
+  // Filter by threshold and classes
+  const filteredDetections = detections.filter(det => {
+    const cat = det.categories?.[0];
+    if (!cat || cat.score < threshold) {
+      return false;
+    }
+    
+    if (classes.length > 0) {
+      const categoryName = cat.categoryName.toLowerCase();
+      return classes.some(cls => categoryName.includes(cls.toLowerCase()));
+    }
+    
+    return true;
+  });
+
+  // Format results
+  const results = filteredDetections.map(det => {
+    const cat = det.categories?.[0];
+    const bbox = det.boundingBox;
+    
+    return {
+      class: cat.categoryName,
+      confidence: cat.score,
+      coordinates: {
+        x: bbox.originX,
+        y: bbox.originY
+      },
+      size: {
+        width: bbox.width,
+        height: bbox.height
+      },
+      image: videoElementForDetection
+    };
+  });
+
+  return results;
+}
+
+/**
+ * Action: Execute local actions immediately (for time-sensitive tasks)
+ * @param {Array} recognitionResults - Recognition results array from recognize()
+ * @param {Array<Function>} actionFunctions - Array of action functions to execute
+ * @returns {Promise<void>}
+ */
+export async function action(recognitionResults, actionFunctions = []) {
+  if (!Array.isArray(actionFunctions) || actionFunctions.length === 0) {
+    return;
+  }
+
+  for (const actionFn of actionFunctions) {
+    if (typeof actionFn === 'function') {
+      try {
+        await actionFn(recognitionResults);
+      } catch (error) {
+        console.error("Error executing local action:", error);
+      }
+    }
+  }
+}
+
+/**
+ * Reasoning: Send image and detection data to cloud LLM for analysis
+ * @param {Array} recognitionResults - Recognition results array from recognize()
+ * @param {string} prompt - Prompt for LLM analysis
+ * @param {string} llmProvider - LLM provider name (e.g., "openai")
+ * @param {string} modelType - Model type/name (e.g., "gpt-4o")
+ * @returns {Promise<Object>} Reasoning results from LLM
+ */
+export async function reasoning(recognitionResults, prompt, llmProvider = "openai", modelType = "gpt-4o") {
+  if (!recognitionResults || recognitionResults.length === 0) {
+    throw new Error("No recognition results to analyze");
+  }
+
+  // Extract image from first result
+  const image = recognitionResults[0]?.image;
+  if (!image) {
+    throw new Error("No image found in recognition results");
+  }
+
+  // Convert canvas to blob if needed
+  let imageBlob;
+  if (image instanceof HTMLCanvasElement) {
+    imageBlob = await new Promise((resolve, reject) => {
+      image.toBlob((blob) => {
+        if (!blob) reject(new Error("Failed to convert canvas to blob"));
+        else resolve(blob);
+      }, "image/jpeg", 0.95);
+    });
+  } else if (image instanceof Blob) {
+    imageBlob = image;
+  } else {
+    throw new Error("Image must be a canvas or blob");
+  }
+
+  // Format detection data
+  const detections = recognitionResults.map(result => ({
+    categoryName: result.class,
+    score: result.confidence,
+    x: result.coordinates.x,
+    y: result.coordinates.y,
+    width: result.size.width,
+    height: result.size.height
+  }));
+
+  const jsonData = {
+    timestamp: new Date().toISOString(),
+    detections,
+    prompt,
+    llmProvider,
+    modelType
+  };
+
+  // Process before sending (optional hook)
+  await imageDetectedProcessing(imageBlob, jsonData);
+
+  // Send to server for reasoning
+  const formData = new FormData();
+  formData.append('image', imageBlob, `reasoning-${Date.now()}.jpg`);
+  formData.append('detections', JSON.stringify(jsonData.detections));
+  formData.append('timestamp', jsonData.timestamp);
+  formData.append('prompt', prompt);
+  formData.append('llmProvider', llmProvider);
+  formData.append('modelType', modelType);
+
+  const response = await fetch(`${API_BASE_URL}/api/reasoning`, {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(errorData.error || `HTTP ${response.status}`);
+  }
+
+  const result = await response.json();
+  
+  // Process response (optional hook)
+  await apiResponceProcessing(result);
+
+  return result;
 }
 
 // Initialize select options from config
@@ -441,9 +724,8 @@ setupEventHandlers({
   },
   onAutoCaptureIntervalChange: () => {
     if (running) {
-      startAutoCapture(); // Restart with new interval (resets tracking)
+      startAutoCapture();
     } else {
-      // Reset tracking even if not running
       detectionPeriods = [];
       lastObjectDetected = false;
       currentDetectionStart = null;
@@ -457,4 +739,3 @@ setupEventHandlers({
 
 // Start camera and detection immediately on page load
 initialize();
-

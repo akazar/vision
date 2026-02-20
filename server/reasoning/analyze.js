@@ -8,15 +8,18 @@ const { OPENAI_MODEL, MAX_TOKENS, createPrompt } = require('./config.js');
  * @param {Array} detections - Detection data array
  * @param {string} timestamp - Timestamp string
  * @param {string} apiKey - OpenAI API key
+ * @param {string} customPrompt - Optional custom prompt (if provided, detectionSummary will be appended)
  * @returns {Promise<{analysis: string, model: string, usage: Object}>}
  */
-async function analyzeWithLLM(imageBuffer, imageMimeType, detections, timestamp, apiKey) {
+async function analyzeWithLLM(imageBuffer, imageMimeType, detections, timestamp, apiKey, customPrompt = null) {
   const imageBase64 = imageBuffer.toString('base64');
   const detectionSummary = detections.map(det =>
     `${det.categoryName} (${(det.score * 100).toFixed(0)}% confidence) at position [${det.x}, ${det.y}] with size ${det.width}×${det.height}`
   ).join('\n');
 
-  const prompt = createPrompt(detectionSummary);
+  const prompt = customPrompt 
+    ? `${customPrompt}\n\nDetected objects:\n${detectionSummary}`
+    : createPrompt(detectionSummary);
   const requestBody = {
     model: OPENAI_MODEL,
     messages: [

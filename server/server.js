@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 const { analyzeWithLLM } = require('./reasoning');
@@ -139,6 +140,70 @@ app.post('/api/analyze', upload.single('image'), async (req, res) => {
         details: error.details
       });
     }
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+});
+
+// Describe image: accepts base64 image + prompt, returns OpenAI description (for v4 / client use)
+app.post('/api/describe', async (req, res) => {
+  try {
+    const { image, prompt } = req.body || {};
+    if (!image || typeof image !== 'string') {
+      return res.status(400).json({ error: 'Missing or invalid "image" (base64 data URL)' });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        error: 'OpenAI API key not configured. Set OPENAI_API_KEY in .env'
+      });
+    }
+
+    const describePrompt = prompt || 'Describe this image in detail.';
+    const requestBody = {
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: describePrompt },
+            { type: 'image_url', image_url: { url: image } }
+          ]
+        }
+      ],
+      max_tokens: 500
+    };
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      return res.status(response.status).json({
+        error: 'OpenAI API request failed',
+        details: errText
+      });
+    }
+
+    const data = await response.json();
+    const description = data.choices?.[0]?.message?.content || 'No description';
+
+    res.json({
+      success: true,
+      description,
+      model: data.model,
+      usage: data.usage
+    });
+  } catch (error) {
+    console.error('Error in /api/describe:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: error.message
