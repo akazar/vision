@@ -3,6 +3,8 @@
  * Draws bounding boxes on top of video element for recognized objects
  */
 
+import CONFIG from '../config.js';
+
 let overlayCanvas = null;
 let overlayCtx = null;
 
@@ -96,6 +98,47 @@ export function clearBoundingBoxes() {
 }
 
 /**
+ * Low-level: draws bounding boxes on a canvas context. Coordinates are in the context's space.
+ * @param {CanvasRenderingContext2D} ctx - Canvas context
+ * @param {Array<{x: number, y: number, width: number, height: number, label: string}>} boxes - Boxes to draw
+ * @param {Object} styles - Optional styles (merged with CONFIG.boundingBoxStyles)
+ */
+export function drawBoundingBoxes(ctx, boxes, styles = {}) {
+    if (!boxes || boxes.length === 0) return;
+    const s = { ...CONFIG.boundingBoxStyles, ...styles };
+    const canvas = ctx.canvas;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+
+    ctx.strokeStyle = s.strokeStyle;
+    ctx.lineWidth = s.lineWidth;
+    ctx.shadowColor = s.shadowColor;
+    ctx.shadowBlur = s.shadowBlur;
+    ctx.font = s.font;
+    ctx.textBaseline = 'top';
+
+    boxes.forEach((box) => {
+        const { x, y, width, height, label } = box;
+        if (width <= 0 || height <= 0) return;
+
+        drawRoundedRect(ctx, x, y, width, height, s.borderRadius);
+
+        const textMetrics = ctx.measureText(label);
+        const textWidth = textMetrics.width;
+        const textHeight = 20;
+        const labelX = Math.max(0, Math.min(x, canvasWidth - textWidth - s.labelPadding * 2));
+        const labelY = Math.max(0, y - textHeight - s.labelPadding * 2);
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = s.labelBgColor;
+        ctx.fillRect(labelX, labelY, textWidth + s.labelPadding * 2, textHeight + s.labelPadding * 2);
+        ctx.fillStyle = s.labelTextColor;
+        ctx.fillText(label, labelX + s.labelPadding, labelY + s.labelPadding);
+        ctx.shadowBlur = s.shadowBlur;
+    });
+}
+
+/**
  * Draws bounding boxes for recognized objects on top of the video element
  * @param {Array} recognitionResults - Array of recognition results from recognize() function
  * @param {HTMLVideoElement} video - Video element
@@ -103,91 +146,33 @@ export function clearBoundingBoxes() {
  */
 export function boundingBoxes(recognitionResults, video, styles) {
     if (!video || !recognitionResults || recognitionResults.length === 0) {
-        // Clear canvas if no results
         clearBoundingBoxes();
         return;
     }
-    
-    // Get or create overlay canvas
+
     const canvas = getOrCreateOverlayCanvas(video);
     const ctx = overlayCtx;
-    
-    // Clear previous drawings
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Use provided styles with defaults
-    const defaultStyles = {
-        strokeStyle: '#00FFAA',
-        lineWidth: 3,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
-        shadowBlur: 4,
-        font: '16px system-ui, -apple-system, sans-serif',
-        labelBgColor: 'rgba(0, 0, 0, 0.8)',
-        labelTextColor: '#00FFAA',
-        labelPadding: 6,
-        borderRadius: 4
-    };
-    
-    const finalStyles = { ...defaultStyles, ...styles };
-    
-    // Set drawing context properties
-    ctx.strokeStyle = finalStyles.strokeStyle;
-    ctx.lineWidth = finalStyles.lineWidth;
-    ctx.shadowColor = finalStyles.shadowColor;
-    ctx.shadowBlur = finalStyles.shadowBlur;
-    ctx.font = finalStyles.font;
-    ctx.textBaseline = 'top';
-    
-    // Draw each bounding box
-    recognitionResults.forEach((result) => {
-        // Map bounding box coordinates from video space to display space
-        const displayBox = mapBoundingBoxToDisplay(result, video);
-        
-        // Clamp coordinates to canvas bounds
-        const x = Math.max(0, Math.min(canvas.width, displayBox.x));
-        const y = Math.max(0, Math.min(canvas.height, displayBox.y));
-        const width = Math.max(0, Math.min(canvas.width - x, displayBox.width));
-        const height = Math.max(0, Math.min(canvas.height - y, displayBox.height));
-        
-        // Skip if box is outside canvas bounds
-        if (width <= 0 || height <= 0) {
-            return;
-        }
-        
-        // Draw rounded rectangle for bounding box
-        drawRoundedRect(ctx, x, y, width, height, finalStyles.borderRadius);
-        
-        // Prepare label text
-        const label = `${result.class} ${(result.confidence * 100).toFixed(0)}%`;
-        const textMetrics = ctx.measureText(label);
-        const textWidth = textMetrics.width;
-        const textHeight = 20;
-        
-        // Calculate label position (above the box, or inside if not enough space)
-        const labelX = Math.max(0, Math.min(x, canvas.width - textWidth - finalStyles.labelPadding * 2));
-        const labelY = Math.max(0, y - textHeight - finalStyles.labelPadding * 2);
-        
-        // Draw label background
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = finalStyles.labelBgColor;
-        ctx.fillRect(
-            labelX,
-            labelY,
-            textWidth + finalStyles.labelPadding * 2,
-            textHeight + finalStyles.labelPadding * 2
-        );
-        
-        // Draw label text
-        ctx.fillStyle = finalStyles.labelTextColor;
-        ctx.fillText(
-            label,
-            labelX + finalStyles.labelPadding,
-            labelY + finalStyles.labelPadding
-        );
-        
-        // Reset shadow for next box
-        ctx.shadowBlur = finalStyles.shadowBlur;
-    });
+
+    const boxes = recognitionResults
+        .map((result) => {
+            const displayBox = mapBoundingBoxToDisplay(result, video);
+            const x = Math.max(0, Math.min(canvas.width, displayBox.x));
+            const y = Math.max(0, Math.min(canvas.height, displayBox.y));
+            const width = Math.max(0, Math.min(canvas.width - x, displayBox.width));
+            const height = Math.max(0, Math.min(canvas.height - y, displayBox.height));
+            if (width <= 0 || height <= 0) return null;
+            return {
+                x,
+                y,
+                width,
+                height,
+                label: `${result.class} ${(result.confidence * 100).toFixed(0)}%`,
+            };
+        })
+        .filter(Boolean);
+
+    drawBoundingBoxes(ctx, boxes, styles);
 }
 
 /**
@@ -199,7 +184,7 @@ export function boundingBoxes(recognitionResults, video, styles) {
  * @param {number} height - Height
  * @param {number} radius - Border radius
  */
-function drawRoundedRect(ctx, x, y, width, height, radius) {
+export function drawRoundedRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
     ctx.lineTo(x + width - radius, y);

@@ -58,10 +58,10 @@ if (fs.existsSync(envPath)) {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Client directory = v4/client/camera-stream (index.html, script.js, styles.css)
-const clientPath = path.join(__dirname, '..', 'client', 'camera-stream');
-// v4 root (capture.js, config.js, recognition.js, etc.) for module imports
+// v4 root (config.js, lib/*.js, etc.) for module imports – served at /
 const v4Root = path.join(__dirname, '..');
+// Camera-stream client – served at /camera-stream
+const cameraStreamPath = path.join(__dirname, '..', 'client', 'camera-stream');
 
 if (process.env.OPENAI_API_KEY) {
   const keyPreview = process.env.OPENAI_API_KEY.substring(0, 7) + '...' + process.env.OPENAI_API_KEY.slice(-4);
@@ -90,13 +90,23 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '50mb' }));
 
-// Serve client first (/, /script.js, /styles.css), then v4 root (/capture.js, /config.js, etc.)
-app.use(express.static(clientPath));
+// v4 root (config.js, lib/, etc.) at / for module imports from both clients
 app.use(express.static(v4Root));
 
-// Root: serve client index.html
-app.get('/', (req, res) => {
-  res.sendFile(path.join(clientPath, 'index.html'));
+// Camera-stream client at /camera-stream
+app.use('/camera-stream', express.static(cameraStreamPath));
+app.get('/camera-stream', (req, res) => {
+  res.sendFile(path.join(cameraStreamPath, 'index.html'));
+});
+app.get('/camera-stream/', (req, res) => {
+  res.sendFile(path.join(cameraStreamPath, 'index.html'));
+});
+
+// Image upload client
+const imageUploadPath = path.join(__dirname, '..', 'client', 'image-upload');
+app.use('/image-upload', express.static(imageUploadPath));
+app.get('/image-upload', (req, res) => {
+  res.sendFile(path.join(imageUploadPath, 'index.html'));
 });
 
 // Health check

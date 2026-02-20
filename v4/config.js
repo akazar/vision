@@ -3,7 +3,7 @@
  */
 const CONFIG = {
     recognition: {
-        classes: ['person', 'dog'],
+        classes: ['person', 'dog', 'car'],
         threshold: 0.5,
         intervalMs: 500
     },
@@ -105,7 +105,12 @@ const CONFIG = {
             if (recognitionResults && recognitionResults.length > 0) {
                 console.log(`[Manual Recognition Action] Detected ${recognitionResults.length} object(s)`);
             }
-        }        
+        },
+        (recognitionResults) => {
+            if (recognitionResults && recognitionResults.length > 0) {
+                console.log('[Manual Recognition Action] Detected:', recognitionResults);
+            }
+        }          
     ],
     serverReasoningActionFunctions: [
         (description) => {

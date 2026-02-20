@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload – Object Recognition</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="content">
+        <h1>Image Recognition</h1>
+        <p>Load a JPG image from file or URL, then run recognition to see bounding boxes.</p>
+
+        <div class="inputs">
+            <div class="input-group">
+                <label for="fileInput">From file</label>
+                <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+            </div>
+            <div class="input-group">
+                <label for="urlInput">From URL</label>
+                <input type="url" id="urlInput" placeholder="https://example.com/image.jpg" />
+            </div>
+        </div>
+
+        <div class="controls">
+            <button type="button" id="recognizeBtn">Recognize</button>
+            <button type="button" id="downloadBtn" class="secondary" hidden>Download (JPG)</button>
+        </div>
+
+        <div class="preview-wrapper">
+            <canvas id="previewCanvas" aria-label="Image with bounding boxes"></canvas>
+            <p id="placeholder" class="placeholder">Select a file or enter a URL, then click Recognize.</p>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
