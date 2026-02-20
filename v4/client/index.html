@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision System - Object Recognition Platform</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="hero">
+            <h1>Vision System</h1>
+            <p class="subtitle">Advanced Object Recognition Platform</p>
+        </header>
+
+        <main class="content">
+            <section class="intro">
+                <h2>System Overview</h2>
+                <p>
+                    The Vision System is a comprehensive object recognition platform that leverages cutting-edge 
+                    machine learning models to detect and identify objects in real-time camera streams and static images. 
+                    Built with MediaPipe's EfficientDet Lite2 model, the system provides accurate, fast, and configurable 
+                    object detection capabilities.
+                </p>
+                <p>
+                    The platform is designed with a modular architecture, allowing for easy configuration of detection 
+                    classes, thresholds, and custom action functions. It supports both real-time processing from camera 
+                    feeds and batch processing of uploaded images, making it suitable for a wide range of applications 
+                    including security monitoring, content analysis, and automated object tracking.
+                </p>
+            </section>
+
+            <section class="features">
+                <h2>Key Features</h2>
+                <ul class="feature-list">
+                    <li><strong>Real-time Object Detection:</strong> Process live camera feeds with configurable recognition intervals</li>
+                    <li><strong>Batch Image Processing:</strong> Upload images from files or URLs for analysis</li>
+                    <li><strong>Customizable Detection Classes:</strong> Configure which object types to detect (persons, vehicles, animals, etc.)</li>
+                    <li><strong>Bounding Box Visualization:</strong> Visual feedback with customizable bounding boxes and labels</li>
+                    <li><strong>Action System:</strong> Execute custom functions based on detection results</li>
+                    <li><strong>OpenAI Integration:</strong> Optional AI-powered image description capabilities</li>
+                    <li><strong>Modular Architecture:</strong> Easy to extend and customize for specific use cases</li>
+                </ul>
+            </section>
+
+            <section class="modules">
+                <div class="module-card">
+                    <div class="module-header">
+                        <h2>Camera Stream</h2>
+                        <a href="/camera-stream" class="cta-button">Launch Camera Stream</a>
+                    </div>
+                    <div class="module-content">
+                        <h3>Real-Time Object Recognition</h3>
+                        <p>
+                            The Camera Stream module provides live object detection from your device's camera feed. 
+                            It continuously processes video frames and displays detected objects with bounding boxes 
+                            overlaid on the video stream.
+                        </p>
+                        <h4>Capabilities:</h4>
+                        <ul>
+                            <li><strong>Live Camera Feed:</strong> Access and display your device's camera stream as a background</li>
+                            <li><strong>Continuous Recognition:</strong> Automatically detect objects at configurable intervals (default: 500ms)</li>
+                            <li><strong>Manual Recognition:</strong> Trigger recognition on-demand for specific frames</li>
+                            <li><strong>Real-time Bounding Boxes:</strong> Visual overlay showing detected objects with confidence scores</li>
+                            <li><strong>Recognition Actions:</strong> Execute custom functions when objects are detected</li>
+                            <li><strong>Regular Actions:</strong> Periodic actions that run independently of recognition cycles</li>
+                        </ul>
+                        <h4>Use Cases:</h4>
+                        <ul>
+                            <li>Security monitoring and surveillance</li>
+                            <li>People counting and tracking</li>
+                            <li>Real-time object presence detection</li>
+                            <li>Interactive applications requiring live visual feedback</li>
+                        </ul>
+                        <h4>Controls:</h4>
+                        <ul>
+                            <li><strong>Start Camera:</strong> Initialize and display the camera stream</li>
+                            <li><strong>Stop Camera:</strong> Stop the camera feed and release resources</li>
+                            <li><strong>Start Recognition:</strong> Begin continuous object detection</li>
+                            <li><strong>Stop Recognition:</strong> Pause detection while keeping camera active</li>
+                            <li><strong>Manual Recognition:</strong> Perform a single recognition pass on the current frame</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-header">
+                        <h2>Image Upload</h2>
+                        <a href="/image-upload" class="cta-button">Launch Image Upload</a>
+                    </div>
+                    <div class="module-content">
+                        <h3>Static Image Analysis</h3>
+                        <p>
+                            The Image Upload module allows you to analyze static images by uploading files from your 
+                            device or loading images from URLs. It performs object detection and displays the results 
+                            with bounding boxes, allowing you to download the annotated image.
+                        </p>
+                        <h4>Capabilities:</h4>
+                        <ul>
+                            <li><strong>File Upload:</strong> Select and process images from your local device (JPG, PNG formats)</li>
+                            <li><strong>URL Loading:</strong> Load images directly from web URLs for remote analysis</li>
+                            <li><strong>Single-Pass Recognition:</strong> Analyze images on-demand with manual trigger</li>
+                            <li><strong>Result Visualization:</strong> Display images with bounding boxes and confidence labels</li>
+                            <li><strong>Image Download:</strong> Save annotated images with detection results</li>
+                            <li><strong>Manual Recognition Actions:</strong> Execute custom functions based on detection results</li>
+                        </ul>
+                        <h4>Use Cases:</h4>
+                        <ul>
+                            <li>Batch image analysis and processing</li>
+                            <li>Content moderation and filtering</li>
+                            <li>Image annotation and labeling</li>
+                            <li>Quality control and object verification</li>
+                            <li>Research and data collection</li>
+                        </ul>
+                        <h4>Workflow:</h4>
+                        <ol>
+                            <li>Select an image file or enter an image URL</li>
+                            <li>Click "Recognize" to perform object detection</li>
+                            <li>View the results with bounding boxes overlaid</li>
+                            <li>Download the annotated image if needed</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <section class="technical">
+                <h2>Technical Details</h2>
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <h3>Model</h3>
+                        <p>MediaPipe EfficientDet Lite2 - A lightweight, efficient object detection model optimized for real-time performance</p>
+                    </div>
+                    <div class="tech-item">
+                        <h3>Configuration</h3>
+                        <p>Centralized configuration system allows customization of detection classes, thresholds, intervals, and action functions</p>
+                    </div>
+                    <div class="tech-item">
+                        <h3>Architecture</h3>
+                        <p>Modular design with separate client modules and shared library functions for recognition, actions, and visualization</p>
+                    </div>
+                    <div class="tech-item">
+                        <h3>API Integration</h3>
+                        <p>Optional OpenAI GPT-4 Vision API integration for advanced image description and analysis capabilities</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Vision System v4 - Object Recognition Platform</p>
+        </footer>
+    </div>
+</body>
+</html>

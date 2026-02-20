@@ -36,8 +36,8 @@ html, body {
     align-items: center;
     justify-content: flex-end;
     padding: 2rem;
-    background: rgba(0, 0, 0, 0.3);
-    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    color: #e0e0e0;
     text-align: center;
 }
 
@@ -68,15 +68,15 @@ button {
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    background: rgba(74, 74, 74, 0.9);
+    color: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
 }
 
 button:hover {
-    background: white;
+    background: rgba(96, 96, 96, 0.95);
     transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.6);
 }
 
 button:active {
@@ -84,12 +84,12 @@ button:active {
 }
 
 #stopBtn, #stopRecognitionBtn {
-    background: rgba(220, 53, 69, 0.9);
-    color: white;
+    background: rgba(80, 80, 80, 0.9);
+    color: #ffffff;
 }
 
 #stopBtn:hover, #stopRecognitionBtn:hover {
-    background: rgb(220, 53, 69);
+    background: rgba(100, 100, 100, 0.95);
 }
 
 /* Video background is handled in script.js */

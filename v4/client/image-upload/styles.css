@@ -7,8 +7,8 @@
 html, body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     min-height: 100vh;
-    background: #1a1b26;
-    color: #c0caf5;
+    background: #000000;
+    color: #e0e0e0;
 }
 
 .content {
@@ -20,7 +20,7 @@ html, body {
 .content h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    color: #7aa2f7;
+    color: #ffffff;
 }
 
 .content > p {
@@ -44,17 +44,17 @@ html, body {
 .input-group label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #9ece6a;
+    color: #b0b0b0;
 }
 
 input[type="file"],
 input[type="url"] {
     padding: 0.6rem 0.75rem;
     font-size: 0.95rem;
-    border: 1px solid #3b4261;
+    border: 1px solid #333333;
     border-radius: 6px;
-    background: #24283b;
-    color: #c0caf5;
+    background: #1a1a1a;
+    color: #e0e0e0;
 }
 
 input[type="url"] {
@@ -66,8 +66,8 @@ input::file-selector-button {
     margin-right: 0.75rem;
     border: none;
     border-radius: 4px;
-    background: #414868;
-    color: #c0caf5;
+    background: #404040;
+    color: #e0e0e0;
     cursor: pointer;
 }
 
@@ -89,12 +89,12 @@ button {
 }
 
 #recognizeBtn {
-    background: #7aa2f7;
-    color: #1a1b26;
+    background: #4a4a4a;
+    color: #ffffff;
 }
 
 #recognizeBtn:hover {
-    background: #89b4fa;
+    background: #606060;
     transform: translateY(-1px);
 }
 
@@ -105,26 +105,26 @@ button {
 }
 
 #downloadBtn {
-    background: #9ece6a;
-    color: #1a1b26;
+    background: #606060;
+    color: #ffffff;
 }
 
 #downloadBtn:hover {
-    background: #b9f27c;
+    background: #707070;
     transform: translateY(-1px);
 }
 
 #downloadBtn.secondary {
-    background: #414868;
-    color: #c0caf5;
+    background: #404040;
+    color: #e0e0e0;
 }
 
 .preview-wrapper {
     position: relative;
     min-height: 200px;
-    background: #24283b;
+    background: #1a1a1a;
     border-radius: 8px;
-    border: 1px solid #3b4261;
+    border: 1px solid #333333;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -146,7 +146,7 @@ button {
     margin: 0;
     padding: 1rem;
     text-align: center;
-    color: #565f89;
+    color: #666666;
     pointer-events: none;
 }
 

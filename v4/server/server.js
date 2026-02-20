@@ -90,8 +90,19 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '50mb' }));
 
+// Landing page at root
+const clientPath = path.join(__dirname, '..', 'client');
+app.get('/', (req, res) => {
+  res.sendFile(path.join(clientPath, 'index.html'));
+});
+
 // v4 root (config.js, lib/, etc.) at / for module imports from both clients
+// This must come before client static to ensure module imports work
 app.use(express.static(v4Root));
+
+// Serve client static files (styles.css for landing page)
+// This serves files from client folder but won't override specific routes above
+app.use(express.static(clientPath));
 
 // Camera-stream client at /camera-stream
 app.use('/camera-stream', express.static(cameraStreamPath));
