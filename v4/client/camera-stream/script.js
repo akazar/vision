@@ -1,27 +1,31 @@
-import { getCameraStream, attachCameraStreamToVideo, waitForVideoAndPlay } from '../../lib/capture.js';
-import { recognize } from '../../lib/recognition.js';
 import CONFIG from '../../config.js';
+import { getCameraStream, attachCameraStreamToVideo, waitForVideoAndPlay } from '../../lib/capture.js';
+import { imageToCanvas } from '../../lib/source-to-canvas.js';
+import { recognize } from '../../lib/recognition.js';
 import { boundingBoxes, clearBoundingBoxes } from '../../lib/bounding-boxes.js';
 import { action } from '../../lib/actions.js';
-import { imageToCanvas } from '../../lib/source-to-canvas.js';
 
-let videoElement = null;
 let cameraStream = null;
+let videoElement = null;
+
 let recognitionInterval = null;
 let regularActionIntervals = [];
 let recognitionResults = [];
 
+
 /**
- * Initialize the camera stream and display it as background
+ * Performs manual recognition on the current video frame.
+ * - Checks if the video element is ready and has valid manual recognition functions.
+ * - Converts the video frame to a canvas and performs recognition.
+ * - Calls the action function with the recognition results.
  */
-async function initCameraBackground() {
-    try {
-        cameraStream = await getCameraStream();
-        videoElement = attachCameraStreamToVideo(document, cameraStream);
-        await waitForVideoAndPlay(videoElement);            
-    } catch (error) {
-        console.error('Failed to initialize camera:', error);
-        alert('Unable to access camera. Please ensure you have granted camera permissions.');
+async function manualRecognition() {
+    const { recognition, model, manualRecognitionActionFunctions } = CONFIG;
+
+    if (videoElement && videoElement.readyState >= 2 && manualRecognitionActionFunctions.length > 0) {
+        const sourceCanvas = await imageToCanvas(videoElement);
+        recognitionResults = await recognize(sourceCanvas, recognition.classes, recognition.threshold, model);
+        action(recognitionResults, manualRecognitionActionFunctions);  
     }
 }
 
@@ -67,15 +71,17 @@ function stopRecognitionLoop() {
 }
 
 /**
+ * Start the camera stream
+ */
+async function startCameraStream() {
+    cameraStream = await getCameraStream();
+    videoElement = attachCameraStreamToVideo(document, cameraStream);
+}
+
+/**
  * Stop the camera stream
  */
-function stopCameraStream() {
-    // Stop recognition loop
-    stopRecognitionLoop();
-    
-    // Clear bounding boxes
-    clearBoundingBoxes();
-    
+function stopCameraStream() {   
     if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
@@ -85,13 +91,16 @@ function stopCameraStream() {
     }
 }
 
-async function manualRecognition() {
-    const { recognition, model, manualRecognitionActionFunctions } = CONFIG;
-
-    if (videoElement && videoElement.readyState >= 2 && manualRecognitionActionFunctions.length > 0) {
-        const sourceCanvas = await imageToCanvas(videoElement);
-        recognitionResults = await recognize(sourceCanvas, recognition.classes, recognition.threshold, model);
-        action(recognitionResults, manualRecognitionActionFunctions);  
+/**
+ * Initialize the camera stream and display it as background
+ */
+async function initCameraBackground() {
+    try {
+        await startCameraStream();
+        await waitForVideoAndPlay(videoElement);            
+    } catch (error) {
+        console.error('Failed to initialize camera:', error);
+        alert('Unable to access camera. Please ensure you have granted camera permissions.');
     }
 }
 
@@ -114,25 +123,29 @@ window.addEventListener('DOMContentLoaded', () => {
     
     if (stopBtn) {
         stopBtn.addEventListener('click', () => {
+            // Stop recognition loop
+            stopRecognitionLoop();
+            // Clear bounding boxes
+            clearBoundingBoxes();
             stopCameraStream();
         });
     }
 
     if (startRecognitionBtn) {
         startRecognitionBtn.addEventListener('click', () => {
-              // Stop any existing recognition loop
-              stopRecognitionLoop();
-              // Start recognition loop after video is ready
-              startRecognitionLoop();
+            // Stop any existing recognition loop
+            stopRecognitionLoop();
+            // Start recognition loop after video is ready
+            startRecognitionLoop();
         });
     }
 
     if (stopRecognitionBtn) {
         stopRecognitionBtn.addEventListener('click', () => {
-              // Stop any existing recognition loop
-              stopRecognitionLoop();
-              // Clear bounding boxes
-              clearBoundingBoxes();
+            // Stop any existing recognition loop
+            stopRecognitionLoop();
+            // Clear bounding boxes
+            clearBoundingBoxes();
         });
     }
 
@@ -145,5 +158,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Clean up when page unloads
 window.addEventListener('beforeunload', () => {
+    stopRecognitionLoop();
+    clearBoundingBoxes();
     stopCameraStream();
 });

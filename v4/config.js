@@ -69,41 +69,41 @@ const CONFIG = {
             },
             intervalMs: 12000
         },
-        {
-            func: async (recognitionResults) => {
-                if (!recognitionResults?.length) return;
-                const firstWithImage = recognitionResults.find(r => r.image);
-                if (!firstWithImage?.image) return;
-                try {
-                    const res = await fetch(`${CONFIG.api.baseUrl}/api/describe`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            image: firstWithImage.image,
-                            prompt: CONFIG.api.describePrompt
-                        })
-                    });
-                    const data = await res.json();
-                    console.log('[Action] Recognition results:', recognitionResults);
-                    if (data.success) {
-                        console.log('[Regular Action] OpenAI description:', data.description);
-                        console.log('[Regular Action] Model:', data.model, 'Usage:', data.usage);
-                    } else {
-                        console.error('[Regular Action] OpenAI error:', data.error, data.details || '');
-                    }
-                    return data;
-                } catch (err) {
-                    console.error('[Regular Action] OpenAI request failed:', err.message);
-                    return { error: err.message };
-                }
-            },
-            intervalMs: 12000
-        }
+        // {
+        //     func: async (recognitionResults) => {
+        //         if (!recognitionResults?.length) return;
+        //         const firstWithImage = recognitionResults.find(r => r.image);
+        //         if (!firstWithImage?.image) return;
+        //         try {
+        //             const res = await fetch(`${CONFIG.api.baseUrl}/api/describe`, {
+        //                 method: 'POST',
+        //                 headers: { 'Content-Type': 'application/json' },
+        //                 body: JSON.stringify({
+        //                     image: firstWithImage.image,
+        //                     prompt: CONFIG.api.describePrompt
+        //                 })
+        //             });
+        //             const data = await res.json();
+        //             console.log('[Action] Recognition results:', recognitionResults);
+        //             if (data.success) {
+        //                 console.log('[Regular Action] OpenAI description:', data.description);
+        //                 console.log('[Regular Action] Model:', data.model, 'Usage:', data.usage);
+        //             } else {
+        //                 console.error('[Regular Action] OpenAI error:', data.error, data.details || '');
+        //             }
+        //             return data;
+        //         } catch (err) {
+        //             console.error('[Regular Action] OpenAI request failed:', err.message);
+        //             return { error: err.message };
+        //         }
+        //     },
+        //     intervalMs: 12000
+        // }
     ],
     manualRecognitionActionFunctions: [
         (recognitionResults) => {
             if (recognitionResults && recognitionResults.length > 0) {
-                console.log(`[ManualRecognition Action] Detected ${recognitionResults.length} object(s)`);
+                console.log(`[Manual Recognition Action] Detected ${recognitionResults.length} object(s)`);
             }
         }        
     ],

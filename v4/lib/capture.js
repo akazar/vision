@@ -69,6 +69,10 @@ export function attachCameraStreamToVideo(doc, cameraStream) {
  * @returns {Promise<void>} Promise that resolves when video is playing
  */
 export async function waitForVideoAndPlay(videoElement) {
+    if (!videoElement) {
+        throw new Error('Video element is null or undefined');
+    }
+    
     await new Promise((resolve, reject) => {
         const playVideo = () => {
             videoElement.play()
@@ -90,8 +94,10 @@ export async function waitForVideoAndPlay(videoElement) {
             videoElement.onloadedmetadata = playVideo;
             // Timeout fallback
             setTimeout(() => {
-                if (videoElement.readyState >= 1) {
+                if (videoElement && videoElement.readyState >= 1) {
                     playVideo();
+                } else {
+                    reject(new Error('Video element failed to load metadata'));
                 }
             }, 1000);
         }
