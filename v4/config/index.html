@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Generator — Vision v4</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Config Generator</h1>
+            <p class="subtitle">Create <code>config.js</code> for Vision v4 from your inputs</p>
+        </header>
+
+        <form id="configForm" class="form">
+            <section class="card" data-section="recognition">
+                <div class="card-head">
+                    <h2>Recognition</h2>
+                    <label class="section-enable"><input type="checkbox" id="useRecognition" checked> Include in config</label>
+                </div>
+                <div class="field">
+                    <label for="classes">Classes (comma-separated)</label>
+                    <input type="text" id="classes" value="person, dog, car" placeholder="person, dog, car">
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label for="threshold">Threshold</label>
+                        <input type="number" id="threshold" value="0.5" min="0" max="1" step="0.05">
+                    </div>
+                    <div class="field">
+                        <label for="intervalMs">Interval (ms)</label>
+                        <input type="number" id="intervalMs" value="500" min="0">
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" data-section="model">
+                <div class="card-head">
+                    <h2>Model</h2>
+                    <label class="section-enable"><input type="checkbox" id="useModel" checked> Include in config</label>
+                </div>
+                <div class="field">
+                    <label for="modelAssetPath">Model asset path (URL)</label>
+                    <input type="url" id="modelAssetPath" value="https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float16/1/efficientdet_lite2.tflite" placeholder="https://...">
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label for="delegate">Delegate</label>
+                        <select id="delegate">
+                            <option value="GPU">GPU</option>
+                            <option value="CPU">CPU</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="scoreThreshold">Score threshold</label>
+                        <input type="number" id="scoreThreshold" value="0.5" min="0" max="1" step="0.05">
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" data-section="api">
+                <div class="card-head">
+                    <h2>API</h2>
+                    <label class="section-enable"><input type="checkbox" id="useApi" checked> Include in config</label>
+                </div>
+                <div class="field">
+                    <label for="baseUrl">Base URL</label>
+                    <input type="url" id="baseUrl" value="http://localhost:3001" placeholder="http://localhost:3001">
+                </div>
+                <div class="field">
+                    <label for="describePrompt">Describe prompt</label>
+                    <textarea id="describePrompt" rows="2" placeholder="Describe this image in detail...">Describe this image in detail. What objects, people, or scene do you see?</textarea>
+                </div>
+            </section>
+
+            <section class="card" data-section="options">
+                <div class="card-head">
+                    <h2>Options</h2>
+                    <label class="section-enable"><input type="checkbox" id="useOptions" checked> Include in config</label>
+                </div>
+                <div class="field checkbox-wrap">
+                    <input type="checkbox" id="downloadResultImage" checked>
+                    <label for="downloadResultImage">Download result image</label>
+                </div>
+            </section>
+
+            <section class="card" data-section="boundingBoxStyles">
+                <div class="card-head">
+                    <h2>Bounding box styles</h2>
+                    <label class="section-enable"><input type="checkbox" id="useBoundingBoxStyles" checked> Include in config</label>
+                </div>
+                <div class="grid">
+                    <div class="field">
+                        <label for="strokeStyle">Stroke style</label>
+                        <input type="text" id="strokeStyle" value="#00FFAA">
+                    </div>
+                    <div class="field">
+                        <label for="lineWidth">Line width</label>
+                        <input type="number" id="lineWidth" value="3" min="1">
+                    </div>
+                    <div class="field">
+                        <label for="shadowColor">Shadow color</label>
+                        <input type="text" id="shadowColor" value="rgba(0, 0, 0, 0.5)">
+                    </div>
+                    <div class="field">
+                        <label for="shadowBlur">Shadow blur</label>
+                        <input type="number" id="shadowBlur" value="4" min="0">
+                    </div>
+                    <div class="field">
+                        <label for="font">Font</label>
+                        <input type="text" id="font" value="16px system-ui, -apple-system, sans-serif">
+                    </div>
+                    <div class="field">
+                        <label for="labelBgColor">Label background color</label>
+                        <input type="text" id="labelBgColor" value="rgba(0, 0, 0, 0.8)">
+                    </div>
+                    <div class="field">
+                        <label for="labelTextColor">Label text color</label>
+                        <input type="text" id="labelTextColor" value="#00FFAA">
+                    </div>
+                    <div class="field">
+                        <label for="labelPadding">Label padding</label>
+                        <input type="number" id="labelPadding" value="6" min="0">
+                    </div>
+                    <div class="field">
+                        <label for="borderRadius">Border radius</label>
+                        <input type="number" id="borderRadius" value="4" min="0">
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" data-section="recognitionActionFunctions">
+                <div class="card-head">
+                    <h2>Recognition action functions</h2>
+                    <label class="section-enable"><input type="checkbox" id="useRecognitionActionFunctions" checked> Include in config</label>
+                </div>
+                <p class="hint">Function body for <code>(recognitionResults) => { ... }</code>. One per line or block.</p>
+                <div id="recognitionActions">
+                    <div class="action-row">
+                        <textarea class="action-body" rows="3" placeholder="if (recognitionResults?.length) console.log(recognitionResults);">if (recognitionResults && recognitionResults.length > 0) {
+    console.log(`[Recognition Action] Detected ${recognitionResults.length} object(s)`);
+}</textarea>
+                        <button type="button" class="btn-remove" title="Remove">−</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-add" id="addRecognitionAction">+ Add recognition action</button>
+            </section>
+
+            <section class="card" data-section="regularActionFunctions">
+                <div class="card-head">
+                    <h2>Regular action functions</h2>
+                    <label class="section-enable"><input type="checkbox" id="useRegularActionFunctions" checked> Include in config</label>
+                </div>
+                <p class="hint">Function body and interval (ms). <code>(recognitionResults) => { ... }</code></p>
+                <div id="regularActions">
+                    <div class="action-row with-interval">
+                        <textarea class="action-body" rows="3" placeholder="console.log(recognitionResults);">if (recognitionResults && recognitionResults.length > 0) {
+    console.log(`[Regular Action] Detected ${recognitionResults.length} object(s)`);
+}</textarea>
+                        <div class="field interval-field">
+                            <label>Interval (ms)</label>
+                            <input type="number" class="interval-ms" value="15000" min="0">
+                        </div>
+                        <button type="button" class="btn-remove" title="Remove">−</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-add" id="addRegularAction">+ Add regular action</button>
+            </section>
+
+            <section class="card" data-section="manualRecognitionActionFunctions">
+                <div class="card-head">
+                    <h2>Manual recognition action functions</h2>
+                    <label class="section-enable"><input type="checkbox" id="useManualRecognitionActionFunctions" checked> Include in config</label>
+                </div>
+                <p class="hint">Function body for <code>(recognitionResults) => { ... }</code></p>
+                <div id="manualActions">
+                    <div class="action-row">
+                        <textarea class="action-body" rows="2" placeholder="console.log(recognitionResults);">if (recognitionResults && recognitionResults.length > 0) {
+    console.log(`[Manual Recognition Action] Detected ${recognitionResults.length} object(s)`);
+}</textarea>
+                        <button type="button" class="btn-remove" title="Remove">−</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-add" id="addManualAction">+ Add manual action</button>
+            </section>
+
+            <section class="card" data-section="serverReasoningActionFunctions">
+                <div class="card-head">
+                    <h2>Server reasoning action functions</h2>
+                    <label class="section-enable"><input type="checkbox" id="useServerReasoningActionFunctions" checked> Include in config</label>
+                </div>
+                <p class="hint">Function body for <code>(description) => { ... }</code></p>
+                <div id="serverReasoningActions">
+                    <div class="action-row">
+                        <textarea class="action-body" rows="2" placeholder="console.log(description);">console.log('[Server Recognition Action] Description:', description);</textarea>
+                        <button type="button" class="btn-remove" title="Remove">−</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-add" id="addServerReasoningAction">+ Add server reasoning action</button>
+            </section>
+
+            <section class="card" data-section="serverRegularActionFunctions">
+                <div class="card-head">
+                    <h2>Server regular action functions</h2>
+                    <label class="section-enable"><input type="checkbox" id="useServerRegularActionFunctions" checked> Include in config</label>
+                </div>
+                <p class="hint">Function body and interval (ms). <code>(description) => { ... }</code></p>
+                <div id="serverRegularActions">
+                    <!-- empty by default; user can add -->
+                </div>
+                <button type="button" class="btn-add" id="addServerRegularAction">+ Add server regular action</button>
+            </section>
+
+            <div class="actions-footer">
+                <button type="submit" class="btn-download">Generate &amp; Download config.js</button>
+            </div>
+        </form>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

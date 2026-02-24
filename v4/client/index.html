@@ -121,6 +121,35 @@
                         </ol>
                     </div>
                 </div>
+
+                <div class="module-card">
+                    <div class="module-header">
+                        <h2>Config Generator</h2>
+                        <a href="/config" class="cta-button">Open Config Generator</a>
+                    </div>
+                    <div class="module-content">
+                        <h3>Create and Customize config.js</h3>
+                        <p>
+                            The Config Generator is a web-based tool that lets you build <code>config.js</code> for Vision v4 
+                            without editing files by hand. Set recognition classes, detection thresholds, model options, 
+                            API settings, and more through a simple form, then copy or download the generated configuration.
+                        </p>
+                        <h4>Capabilities:</h4>
+                        <ul>
+                            <li><strong>Recognition:</strong> Configure detection classes (e.g. person, dog, car), score threshold, and recognition interval</li>
+                            <li><strong>Model:</strong> Set model asset path, delegate (GPU/CPU), and score threshold</li>
+                            <li><strong>API:</strong> Configure base URL and describe prompt for OpenAI-style image description</li>
+                            <li><strong>Options:</strong> Tune other runtime and display options</li>
+                            <li><strong>Export:</strong> Copy the generated config or download it as <code>config.js</code></li>
+                        </ul>
+                        <h4>Use Cases:</h4>
+                        <ul>
+                            <li>Quick setup of a new Vision v4 deployment</li>
+                            <li>Experimenting with different detection classes and thresholds</li>
+                            <li>Generating configs for different environments (dev, staging, production)</li>
+                        </ul>
+                    </div>
+                </div>
             </section>
 
             <section class="technical">
@@ -132,7 +161,7 @@
                     </div>
                     <div class="tech-item">
                         <h3>Configuration</h3>
-                        <p>Centralized configuration system allows customization of detection classes, thresholds, intervals, and action functions</p>
+                        <p>Centralized configuration system allows customization of detection classes, thresholds, intervals, and action functions. Use the <a href="/config">Config Generator</a> to create or tweak <code>config.js</code> in the browser.</p>
                     </div>
                     <div class="tech-item">
                         <h3>Architecture</h3>

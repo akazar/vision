@@ -1,3 +1,10 @@
+/**
+ * server.js — Core server logic and API for the v4 app.
+ * Loads config.js and .env, sets CORS and JSON body parsing, exposes /health and
+ * /api/describe (OpenAI image description). Runs reasoning and regular action
+ * functions from config (serverReasoningActionFunctions, serverRegularActionFunctions).
+ */
+
 import express from 'express';
 import fetch from 'node-fetch';
 import fs from 'fs';

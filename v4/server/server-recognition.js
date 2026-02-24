@@ -1,8 +1,9 @@
 /**
- * Server-side recognition script: load image from local path, run recognition (via browser),
- * draw bounding boxes using lib, save result in the same folder, log recognition data.
- * Reuses: drawBoundingBoxes from lib/bounding-boxes.js, CONFIG from config.js.
- * Recognition runs in a headless browser to reuse lib/recognition.js and lib/source-to-canvas.js.
+ * server-recognition.js — CLI script for server-side image recognition.
+ * Loads an image from a local path (argv), runs recognition in a headless browser
+ * (reusing lib/recognition.js and lib/source-to-canvas.js), runs server reasoning
+ * actions from config, draws bounding boxes via lib/bounding-boxes.js, and optionally
+ * saves the annotated image next to the original. Usage: node server-recognition.js <path-to-image>.
  */
 
 import path from 'path';

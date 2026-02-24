@@ -1,3 +1,9 @@
+/**
+ * host.js — Front-end hosting for the v4 app.
+ * Registers Express routes and static middleware for: root landing page, /config,
+ * /camera-stream, and /image-upload. Serves the v4 root for shared lib/ and config.js.
+ */
+
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -13,6 +19,7 @@ export function setupFrontendHosting(app) {
   // Path definitions
   const v4Root = path.join(__dirname, '..');
   const clientPath = path.join(__dirname, '..', 'client');
+  const configPath = path.join(__dirname, '..', 'config');
   const cameraStreamPath = path.join(__dirname, '..', 'client', 'camera-stream');
   const imageUploadPath = path.join(__dirname, '..', 'client', 'image-upload');
 
@@ -28,6 +35,15 @@ export function setupFrontendHosting(app) {
   // Serve client static files (styles.css for landing page)
   // This serves files from client folder but won't override specific routes above
   app.use(express.static(clientPath));
+
+  // Config generator at /config
+  app.use('/config', express.static(configPath));
+  app.get('/config', (req, res) => {
+    res.sendFile(path.join(configPath, 'index.html'));
+  });
+  app.get('/config/', (req, res) => {
+    res.sendFile(path.join(configPath, 'index.html'));
+  });
 
   // Camera-stream client at /camera-stream
   app.use('/camera-stream', express.static(cameraStreamPath));

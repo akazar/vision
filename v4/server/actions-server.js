@@ -1,6 +1,8 @@
 /**
- * Server-side action runner for reasoning/description results.
- * Similar to lib/actions.js but runs functions with description as parameter.
+ * actions-server.js — Server-side action runner for reasoning/description results.
+ * Invokes config-defined action functions (e.g. from serverReasoningActionFunctions)
+ * with a single string argument (the description). Used by server.js after /api/describe
+ * and by server-recognition.js after recognition; analogous to lib/actions.js on the client.
  */
 
 /**
