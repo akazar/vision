@@ -33,12 +33,12 @@ async function manualRecognition() {
  * Start the recognition loop for real-time object detection
  */
 function startRecognitionLoop() {
-    const { recognition, model, boundingBoxStyles, recognitionActionFunctions, regularActionFunctions } = CONFIG;
+    const { recognition, boundingBoxStyles, recognitionActionFunctions, regularActionFunctions } = CONFIG;
 
     recognitionInterval = setInterval(async () => {
         if (videoElement && videoElement.readyState >= 2) {
             const sourceCanvas = await imageToCanvas(videoElement);
-            recognitionResults = await recognize(sourceCanvas, recognition.classes, recognition.threshold, model);
+            recognitionResults = await recognize(sourceCanvas, CONFIG);
             if (boundingBoxStyles) {
                 boundingBoxes(recognitionResults, videoElement, boundingBoxStyles);
             }

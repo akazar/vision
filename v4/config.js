@@ -4,6 +4,7 @@
 const CONFIG = {
     recognition: {
         classes: ['person', 'dog', 'car'],
+        maxResults: 10,
         threshold: 0.5,
         intervalMs: 500
     },
@@ -11,6 +12,7 @@ const CONFIG = {
         baseOptions: {
             modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float16/1/efficientdet_lite2.tflite",
             delegate: "GPU",
+            runningMode: 'IMAGE'
         },
         scoreThreshold: 0.5
     },

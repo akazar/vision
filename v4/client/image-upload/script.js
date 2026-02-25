@@ -40,12 +40,9 @@ async function getSourceCanvas() {
  */
 async function runRecognition(canvas) {    
     try {
-        const { recognition, model } = CONFIG;
         const results = await recognize(
             canvas,
-            recognition.classes,
-            recognition.threshold,
-            model
+            CONFIG
         );
         // Draw image on a new canvas (same size), then draw boxes in image space
         const out = document.createElement('canvas');
