@@ -1,7 +1,7 @@
 /**
  * hosting-server.js — Front-end hosting for the v4 app.
  * Registers Express routes and static middleware for: root landing page, /config,
- * /camera-stream, and /image-upload. Serves the v4 root for shared lib/ and config.js.
+ * /camera-stream, /image-upload, and /server-detection. Serves the v4 root for shared lib/ and config.js.
  */
 
 import express from 'express';
@@ -23,6 +23,7 @@ export function setupFrontendHosting(app) {
   const configPath = path.join(__dirname, '..', 'config');
   const cameraStreamPath = path.join(__dirname, '..', 'client', 'camera-stream');
   const imageUploadPath = path.join(__dirname, '..', 'client', 'image-upload');
+  const serverDetectionPath = path.join(__dirname, '..', 'client', 'server-detection');
 
   // Landing page at root (index + styles from client/landing)
   app.get('/', (req, res) => {
@@ -59,5 +60,17 @@ export function setupFrontendHosting(app) {
   app.use('/image-upload', express.static(imageUploadPath));
   app.get('/image-upload', (req, res) => {
     res.sendFile(path.join(imageUploadPath, 'index.html'));
+  });
+  app.get('/image-upload/', (req, res) => {
+    res.sendFile(path.join(imageUploadPath, 'index.html'));
+  });
+
+  // Server-detection client at /server-detection
+  app.use('/server-detection', express.static(serverDetectionPath));
+  app.get('/server-detection', (req, res) => {
+    res.sendFile(path.join(serverDetectionPath, 'index.html'));
+  });
+  app.get('/server-detection/', (req, res) => {
+    res.sendFile(path.join(serverDetectionPath, 'index.html'));
   });
 }

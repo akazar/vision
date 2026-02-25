@@ -13,14 +13,15 @@ const CONFIG = {
             modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float16/1/efficientdet_lite2.tflite",
             delegate: "GPU",
             runningMode: 'IMAGE'
-        },
-        scoreThreshold: 0.5
+        }
+        // scoreThreshold: 0.5  // Unused in v4: detector uses recognition.threshold
     },
-    api: {
-        baseUrl: 'http://localhost:3001',
-        describePrompt: 'Describe this image in detail. What objects, people, or scene do you see?'
-    },
-    downloadResultImage: true,
+    // Unused in v4 (only referenced in commented action example below):
+    // api: {
+    //     baseUrl: 'http://localhost:3001',
+    //     describePrompt: 'Describe this image in detail. What objects, people, or scene do you see?'
+    // },
+    // downloadResultImage: true,  // Unused in v4: image-upload does not check this
     boundingBoxStyles: {
         strokeStyle: '#00FFAA',
         lineWidth: 3,

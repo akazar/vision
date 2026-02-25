@@ -7,6 +7,7 @@
 import express from 'express';
 import { setupFrontendHosting } from './hosting-server.js';
 import { setupServerLogic } from './api-server.js';
+import { setupRecognitionServer } from './recognition-server.js';
 
 const PORT = process.env.PORT || 3001;
 
@@ -25,6 +26,9 @@ setupFrontendHosting(app);
 
 // Setup server logic (API endpoints, middleware)
 setupServerLogic(app);
+
+// Setup recognition API (POST /api/recognize)
+setupRecognitionServer(app);
 
 // Start the server
 app.listen(PORT, () => {

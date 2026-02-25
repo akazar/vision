@@ -35,6 +35,7 @@
                 <ul class="feature-list">
                     <li><strong>Real-time Object Detection:</strong> Process live camera feeds with configurable recognition intervals</li>
                     <li><strong>Batch Image Processing:</strong> Upload images from files or URLs for analysis</li>
+                    <li><strong>Server Detection:</strong> Run recognition via the server API (Puppeteer + MediaPipe) and view results in the browser</li>
                     <li><strong>Customizable Detection Classes:</strong> Configure which object types to detect (persons, vehicles, animals, etc.)</li>
                     <li><strong>Bounding Box Visualization:</strong> Visual feedback with customizable bounding boxes and labels</li>
                     <li><strong>Action System:</strong> Execute custom functions based on detection results</li>
@@ -119,6 +120,38 @@
                             <li>View the results with bounding boxes overlaid</li>
                             <li>Download the annotated image if needed</li>
                         </ol>
+                    </div>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-header">
+                        <h2>Server Detection</h2>
+                        <a href="/server-detection" class="cta-button">Launch Server Detection</a>
+                    </div>
+                    <div class="module-content">
+                        <h3>Object Recognition via Server API</h3>
+                        <p>
+                            The Server Detection module lets you run object detection on images using the recognition server.
+                            Load an image from file or URL; recognition is performed on the server (Puppeteer + MediaPipe),
+                            and results are displayed with bounding boxes. You can download the annotated image.
+                        </p>
+                        <h4>Capabilities:</h4>
+                        <ul>
+                            <li><strong>File or URL:</strong> Load images from your device or from a web URL</li>
+                            <li><strong>Server-Side Recognition:</strong> Detection runs on the recognition server (no client-side model)</li>
+                            <li><strong>Result Visualization:</strong> Bounding boxes and labels overlaid on the image</li>
+                            <li><strong>Download:</strong> Save the annotated result as JPG</li>
+                        </ul>
+                        <h4>Use Cases:</h4>
+                        <ul>
+                            <li>Offloading heavy detection to a dedicated server</li>
+                            <li>Testing the recognition server API from the browser</li>
+                            <li>Batch or one-off image analysis without loading the model in the client</li>
+                        </ul>
+                        <h4>Requirements:</h4>
+                        <ul>
+                            <li>The recognition server must be running (e.g. <code>npm run recognize</code> or separate process on the configured port)</li>
+                        </ul>
                     </div>
                 </div>
 
