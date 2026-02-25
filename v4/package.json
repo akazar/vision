@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server/main.js",
     "dev": "node server/main.js",
-    "recognize": "node server/server-recognition.js",
+    "recognize": "node server/recognition-server.js",
     "postinstall": "playwright install chromium"
   },
   "keywords": [

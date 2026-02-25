@@ -1,12 +1,12 @@
 /**
  * main.js — Entry point for the v4 server.
- * Creates the Express app, wires front-end hosting (host.js) and API logic (server.js),
+ * Creates the Express app, wires front-end hosting (hosting-server.js) and API logic (api-server.js),
  * then starts the HTTP server on PORT (default 3001).
  */
 
 import express from 'express';
-import { setupFrontendHosting } from './host.js';
-import { setupServerLogic } from './server.js';
+import { setupFrontendHosting } from './hosting-server.js';
+import { setupServerLogic } from './api-server.js';
 
 const PORT = process.env.PORT || 3001;
 

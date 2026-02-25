@@ -1,25 +1,23 @@
 /**
- * server-recognition.js — CLI script for server-side image recognition.
- * Loads an image from a local path (argv), runs recognition in a headless browser
- * (reusing lib/recognition.js and lib/source-to-canvas.js), runs server reasoning
+ * recognition-server.js — CLI script for server-side image recognition.
+ * Loads an image from a local path (argv), runs recognition natively in Node
+ * (server/recognition-node.js + lib/recognition-core.js), runs server reasoning
  * actions from config, draws bounding boxes via lib/bounding-boxes.js, and optionally
- * saves the annotated image next to the original. Usage: node server-recognition.js <path-to-image>.
+ * saves the annotated image next to the original.
+ * Usage: node recognition-server.js <path-to-image>
  */
 
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import express from 'express';
 import { createCanvas, loadImage } from 'canvas';
-import { chromium } from 'playwright';
 import CONFIG from '../config.js';
 import { drawBoundingBoxes } from '../lib/bounding-boxes.js';
 import { action } from '../lib/actions.js';
+import { recognizeFromPath } from './recognition-node.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const v4Root = path.join(__dirname, '..');
 
 /**
  * Get image path from argv; resolve to absolute; throw if missing or not a file.
@@ -27,7 +25,7 @@ const v4Root = path.join(__dirname, '..');
 function getImagePathFromArgv() {
   const raw = process.argv[2];
   if (!raw || typeof raw !== 'string') {
-    throw new Error('Usage: node server-recognition.js <path-to-image>');
+    throw new Error('Usage: node recognition-server.js <path-to-image>');
   }
   const resolved = path.resolve(raw);
   if (!fs.existsSync(resolved)) {
@@ -38,41 +36,6 @@ function getImagePathFromArgv() {
     throw new Error(`Not a file: ${resolved}`);
   }
   return resolved;
-}
-
-/**
- * Run recognition in headless browser (reuses lib/recognition.js and lib/source-to-canvas.js).
- * Serves v4 root so /lib and /config.js resolve; opens image-upload, sets file, runs recognize.
- */
-async function runRecognitionInBrowser(imagePath, port) {
-  const browser = await chromium.launch({ headless: true });
-  try {
-    const page = await browser.newPage();
-    const url = `http://127.0.0.1:${port}/client/image-upload/index.html`;
-    await page.goto(url, { waitUntil: 'networkidle' });
-
-    await page.setInputFiles('#fileInput', imagePath);
-
-    const results = await page.evaluate(async () => {
-      const fileInput = document.getElementById('fileInput');
-      const file = fileInput?.files?.[0];
-      if (!file) return null;
-      const { imageToCanvas } = await import('/lib/source-to-canvas.js');
-      const { recognize } = await import('/lib/recognition.js');
-      const config = (await import('/config.js')).default;
-      const canvas = await imageToCanvas(file);
-      return await recognize(
-        canvas,
-        config.recognition.classes,
-        config.recognition.threshold,
-        config.model
-      );
-    });
-
-    return results;
-  } finally {
-    await browser.close();
-  }
 }
 
 /**
@@ -106,21 +69,12 @@ async function main() {
   const basename = path.basename(imagePath, path.extname(imagePath));
   const ext = path.extname(imagePath);
 
-  const app = express();
-  app.use(express.static(v4Root));
-  const server = await new Promise((resolve, reject) => {
-    const s = app.listen(0, '127.0.0.1', () => resolve(s));
-    s.on('error', reject);
+  const { recognition, model } = CONFIG;
+  const results = await recognizeFromPath(imagePath, {
+    classes: recognition.classes,
+    threshold: recognition.threshold,
+    modelConfig: model,
   });
-  const port = server.address().port;
-
-  let results = [];
-  try {
-    results = await runRecognitionInBrowser(imagePath, port);
-    if (!results) results = [];
-  } finally {
-    server.close();
-  }
 
   if (CONFIG.serverReasoningActionFunctions && CONFIG.serverReasoningActionFunctions.length > 0) {
     await action(results, CONFIG.serverReasoningActionFunctions);
@@ -141,9 +95,10 @@ async function main() {
     const outName = `${basename}-recognition${outFormat.ext}`;
     const outPath = path.join(dir, outName);
 
-    const buf = outFormat.mime === 'image/jpeg'
-      ? canvas.toBuffer('image/jpeg', { quality: 0.95 })
-      : canvas.toBuffer(outFormat.mime);
+    const buf =
+      outFormat.mime === 'image/jpeg'
+        ? canvas.toBuffer('image/jpeg', { quality: 0.95 })
+        : canvas.toBuffer(outFormat.mime);
     fs.writeFileSync(outPath, buf);
 
     console.log(`Saved image with bounding boxes to: ${outPath}`);
