@@ -1,11 +1,11 @@
 /**
  * Recognition API: exposes setupRecognitionServer(app) to register POST /api/recognize on the main app.
- * Accepts image as base64 and optional config, uses recognize() from recognition.mjs, returns detections.
+ * Accepts image as base64 and optional config, uses recognize() from recognition/recognition.mjs, returns detections.
  */
 
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { recognize } from './recognition.mjs';
+import { recognize } from './recognition/recognition.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

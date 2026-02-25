@@ -4,14 +4,14 @@
  * Logic:
  * - Image input is provided as a data URL (or, in CLI mode, read from disk or fetched from a URL).
  * - A headless browser is launched; the detection pipeline runs inside the page via page.evaluate()
- *   so that MediaPipe’s browser-only APIs (Canvas, Image, WebAssembly) are available.
+ *   so that MediaPipe's browser-only APIs (Canvas, Image, WebAssembly) are available.
  * - In the page: the data URL is loaded into an Image, drawn to a canvas, and getImageData() is used
  *   to get pixel data for ObjectDetector. The detector runs, then results are normalized to a canonical
  *   shape (id, class, confidence, coordinates, size, optional cropped image data URL) and returned.
  * - The browser is closed and the array of detections is returned to the caller.
  *
  * Use cases:
- * - CLI: run detection on a local file or remote URL and print JSON (e.g. node recognition.mjs ./image.jpg or node recognition.mjs https://example.com/image.jpg --url).
+ * - CLI: run detection on a local file or remote URL and print JSON (e.g. node server/recognition/recognition.mjs ./image.jpg or node server/recognition/recognition.mjs https://example.com/image.jpg --url).
  * - Programmatic: call recognize(dataUrl, config) from another server module (e.g. API or job queue) to get detections for a given image without a browser on the client.
  */
 import fs from "node:fs/promises";
@@ -19,7 +19,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import puppeteer from "puppeteer";
-import CONFIG from "../config.js";
+import CONFIG from "../../config.js";
 
 const MP_VERSION = "0.10.32";
 const TASKS_MODULE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VERSION}/vision_bundle.mjs`;
@@ -191,7 +191,7 @@ async function main() {
 
 export { recognize };
 
-// Run CLI only when this file is the entry point (e.g. node recognition.mjs image.jpg), not when imported
+// Run CLI only when this file is the entry point (e.g. node server/recognition/recognition.mjs image.jpg), not when imported
 const isMain =
   process.argv[1] &&
   path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
