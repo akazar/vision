@@ -5,7 +5,8 @@
 
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { recognize } from './recognition/recognition.mjs';
+// import { recognize } from './recognition/recognition.mjs';
+import { recognize } from './recognition/yolo/detect-yolo.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
