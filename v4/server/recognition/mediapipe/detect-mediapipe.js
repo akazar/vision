@@ -11,7 +11,7 @@
  * - The browser is closed and the array of detections is returned to the caller.
  *
  * Use cases:
- * - CLI: run detection on a local file or remote URL and print JSON (e.g. node server/recognition/mediapipe/mediapipe-detect.mjs ./image.jpg or node server/recognition/mediapipe/mediapipe-detect.mjs https://example.com/image.jpg --url).
+ * - CLI: run detection on a local file or remote URL and print JSON (e.g. node server/recognition/mediapipe/detect-mediapipe.js ./image.jpg or node server/recognition/mediapipe/detect-mediapipe.js https://example.com/image.jpg --url).
  * - Programmatic: call recognize(dataUrl, config) from another server module (e.g. API or job queue) to get detections for a given image without a browser on the client.
  */
 import fs from "node:fs/promises";
@@ -29,7 +29,7 @@ function parseArgs(argv) {
   const args = argv.slice(2);
   const url = args.includes("--url");
   const imagePath = args.find((a) => !a.startsWith("--"));
-  if (!imagePath) throw new Error("Usage: node mediapipe-detect.mjs <imagePath> [--url]");
+  if (!imagePath) throw new Error("Usage: node detect-mediapipe.js <imagePath> [--url]");
   return { imagePath, url };
 }
 
@@ -195,7 +195,7 @@ async function main() {
 
 export { recognize };
 
-// Run CLI only when this file is the entry point (e.g. node server/recognition/mediapipe/mediapipe-detect.mjs image.jpg), not when imported
+// Run CLI only when this file is the entry point (e.g. node server/recognition/mediapipe/detect-mediapipe.js image.jpg), not when imported
 const isMain =
   process.argv[1] &&
   path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
