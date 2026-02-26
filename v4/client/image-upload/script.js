@@ -39,36 +39,31 @@ async function getSourceCanvas() {
  * Run recognition and show result canvas with bounding boxes; log results and show Download.
  */
 async function runRecognition(canvas) {    
-    try {
-        const results = await recognize(
-            canvas,
-            CONFIG
-        );
-        // Draw image on a new canvas (same size), then draw boxes in image space
-        const out = document.createElement('canvas');
-        out.width = canvas.width;
-        out.height = canvas.height;
-        const ctx = out.getContext('2d');
-        ctx.drawImage(canvas, 0, 0);
-        const boxes = results.map((r) => ({
-            x: r.coordinates.x,
-            y: r.coordinates.y,
-            width: r.size.width,
-            height: r.size.height,
-            label: `${r.class} ${(r.confidence * 100).toFixed(0)}%`,
-        }));
-        drawBoundingBoxes(ctx, boxes);
+    const results = await recognize(
+        canvas,
+        CONFIG
+    );
+    // Draw image on a new canvas (same size), then draw boxes in image space
+    const out = document.createElement('canvas');
+    out.width = canvas.width;
+    out.height = canvas.height;
+    const ctx = out.getContext('2d');
+    ctx.drawImage(canvas, 0, 0);
+    const boxes = results.map((r) => ({
+        x: r.coordinates.x,
+        y: r.coordinates.y,
+        width: r.size.width,
+        height: r.size.height,
+        label: `${r.class} ${(r.confidence * 100).toFixed(0)}%`,
+    }));
+    drawBoundingBoxes(ctx, boxes);
 
-        resultCanvas = out;
-        previewCanvas.width = out.width;
-        previewCanvas.height = out.height;
-        previewCanvas.getContext('2d').drawImage(out, 0, 0);
+    resultCanvas = out;
+    previewCanvas.width = out.width;
+    previewCanvas.height = out.height;
+    previewCanvas.getContext('2d').drawImage(out, 0, 0);
 
-        return results;
-    } catch (err) {
-        console.error('Recognition error:', err);
-        alert('Recognition failed: ' + (err.message || 'Unknown error'));
-    }
+    return results;
 }
 
 /**
