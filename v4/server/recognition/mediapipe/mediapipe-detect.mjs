@@ -11,7 +11,7 @@
  * - The browser is closed and the array of detections is returned to the caller.
  *
  * Use cases:
- * - CLI: run detection on a local file or remote URL and print JSON (e.g. node server/recognition/recognition.mjs ./image.jpg or node server/recognition/recognition.mjs https://example.com/image.jpg --url).
+ * - CLI: run detection on a local file or remote URL and print JSON (e.g. node server/recognition/mediapipe/mediapipe-detect.mjs ./image.jpg or node server/recognition/mediapipe/mediapipe-detect.mjs https://example.com/image.jpg --url).
  * - Programmatic: call recognize(dataUrl, config) from another server module (e.g. API or job queue) to get detections for a given image without a browser on the client.
  */
 import fs from "node:fs/promises";
@@ -19,7 +19,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import puppeteer from "puppeteer";
-import CONFIG from "../../config.js";
+import CONFIG from "../../../config.js";
 
 const MP_VERSION = "0.10.32";
 const TASKS_MODULE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VERSION}/vision_bundle.mjs`;
@@ -29,7 +29,7 @@ function parseArgs(argv) {
   const args = argv.slice(2);
   const url = args.includes("--url");
   const imagePath = args.find((a) => !a.startsWith("--"));
-  if (!imagePath) throw new Error("Usage: node recognition.mjs <imagePath> [--url]");
+  if (!imagePath) throw new Error("Usage: node mediapipe-detect.mjs <imagePath> [--url]");
   return { imagePath, url };
 }
 
@@ -145,7 +145,11 @@ async function recognize(dataUrl, config) {
     );
 
     const detectorOptions = {
-      baseOptions: config.model.baseOptions,
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float16/1/efficientdet_lite2.tflite",
+        delegate: "GPU",
+        runningMode: "IMAGE",
+      },
       scoreThreshold: config.recognition.threshold,
       maxResults: config.recognition.maxResults || 10,
     };
@@ -191,7 +195,7 @@ async function main() {
 
 export { recognize };
 
-// Run CLI only when this file is the entry point (e.g. node server/recognition/recognition.mjs image.jpg), not when imported
+// Run CLI only when this file is the entry point (e.g. node server/recognition/mediapipe/mediapipe-detect.mjs image.jpg), not when imported
 const isMain =
   process.argv[1] &&
   path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));

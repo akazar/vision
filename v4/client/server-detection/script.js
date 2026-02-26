@@ -13,6 +13,7 @@ const RECOGNITION_SERVER_URL = CONFIG.recognitionServerUrl ?? '';
 
 const fileInput = document.getElementById('fileInput');
 const urlInput = document.getElementById('urlInput');
+const modelSelect = document.getElementById('modelSelect');
 const recognizeBtn = document.getElementById('recognizeBtn');
 const downloadBtn = document.getElementById('downloadBtn');
 const previewCanvas = document.getElementById('previewCanvas');
@@ -40,13 +41,13 @@ async function getSourceCanvas() {
 /**
  * Run recognition via server API and show result canvas with bounding boxes; log results and show Download.
  */
-async function runRecognition(canvas) {
+async function runRecognition(canvas, model) {
     try {
         const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
         const res = await fetch(`${RECOGNITION_SERVER_URL}/api/recognize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: dataUrl, config: CONFIG }),
+            body: JSON.stringify({ image: dataUrl, config: {...CONFIG, model: model ?? CONFIG.model } }),
         });
         const data = await res.json();
         if (!data.success) {
@@ -141,7 +142,8 @@ recognizeBtn.addEventListener('click', async () => {
         return;
     }
     recognizeBtn.disabled = true;
-    const recognitionResults = await runRecognition(canvas);
+    const model = modelSelect.value ?? CONFIG.model;
+    const recognitionResults = await runRecognition(canvas, model);
     if (CONFIG.manualRecognitionActionFunctions.length > 0) {
         action(recognitionResults, CONFIG.manualRecognitionActionFunctions);  
     }

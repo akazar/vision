@@ -10,7 +10,13 @@
     <div class="content">
         <h1>Server Object Recognition</h1>
         <p>Load a JPG image from file or URL, then run recognition to see bounding boxes on the server.</p>
-
+        <div class="input-group">
+            <label for="modelSelect">Model</label>
+            <select id="modelSelect">
+                <option value="YOLO">YOLO</option>
+                <option value="MEDIAPIPE">MEDIAPIPE</option>
+            </select>
+        </div>
         <div class="inputs">
             <div class="input-group">
                 <label for="fileInput">From file</label>

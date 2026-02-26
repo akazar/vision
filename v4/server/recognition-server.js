@@ -1,16 +1,18 @@
 /**
  * Recognition API: exposes setupRecognitionServer(app) to register POST /api/recognize on the main app.
- * Accepts image as base64 and optional config, uses recognize() from recognition/recognition.mjs, returns detections.
+ * Accepts image as base64 and optional config, uses recognize() from recognition/yolo or recognition/mediapipe based on config.model.
  */
 
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-// import { recognize } from './recognition/recognition.mjs';
-import { recognize } from './recognition/yolo/detect-yolo.mjs';
+import { recognize as recognizeYolo } from './recognition/yolo/detect-yolo.mjs';
+import { recognize as recognizeMediapipe } from './recognition/mediapipe/mediapipe-detect.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let CONFIG = null;
+let recognize = null;
+
 try {
   const configPath = path.join(__dirname, '..', 'config.js');
   const configModule = await import(pathToFileURL(configPath).href);
@@ -19,7 +21,7 @@ try {
   console.warn('Could not load config.js:', err.message);
   CONFIG = {
     recognition: { threshold: 0.5, maxResults: 10, classes: [] },
-    model: { baseOptions: {} },
+    model: 'MEDIAPIPE',
   };
 }
 
@@ -47,6 +49,7 @@ export function setupRecognitionServer(app) {
         ? image
         : `data:${mime || 'image/jpeg'};base64,${image.replace(/^data:[^;]+;base64,/, '')}`;
       const effectiveConfig = config && typeof config === 'object' ? config : CONFIG;
+      recognize = effectiveConfig?.model === 'YOLO' ? recognizeYolo : recognizeMediapipe;
 
       const detections = await recognize(dataUrl, effectiveConfig);
 

@@ -118,7 +118,11 @@ function processDetections(rawDetections, options = {}) {
 async function recognize(sourceCanvas, config = {}) {
   if (!detector) {
     const detectorOptions = {
-      baseOptions: config.model.baseOptions,
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float16/1/efficientdet_lite2.tflite",
+        delegate: "GPU",
+        runningMode: "IMAGE",
+      },
       scoreThreshold: config.recognition.threshold,
       maxResults: config.recognition.maxResults || 10,
     };

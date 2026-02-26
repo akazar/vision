@@ -8,20 +8,12 @@ const CONFIG = {
         threshold: 0.5,
         intervalMs: 500
     },
-    model: {
-        baseOptions: {
-            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float16/1/efficientdet_lite2.tflite",
-            delegate: "GPU",
-            runningMode: 'IMAGE'
-        }
-        // scoreThreshold: 0.5  // Unused in v4: detector uses recognition.threshold
+    model: 'MEDIAPIPE', // 'MEDIAPIPE' || 'YOLO'
+    reasoning: {
+        model: 'openai', // or 'google'
+        describePrompt: 'Describe this image in detail. What objects, people, or scene do you see?'
     },
-    // Unused in v4 (only referenced in commented action example below):
-    // api: {
-    //     baseUrl: 'http://localhost:3001',
-    //     describePrompt: 'Describe this image in detail. What objects, people, or scene do you see?'
-    // },
-    // downloadResultImage: true,  // Unused in v4: image-upload does not check this
+    downloadResultImage: true,
     boundingBoxStyles: {
         strokeStyle: '#00FFAA',
         lineWidth: 3,
