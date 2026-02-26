@@ -1,0 +1,188 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    min-height: 100vh;
+    background: #000000;
+    color: #e0e0e0;
+}
+
+.content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.content h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+}
+
+.content > p {
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+}
+
+.inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #b0b0b0;
+}
+
+input[type="file"],
+input[type="url"],
+input[type="text"] {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.95rem;
+    border: 1px solid #333333;
+    border-radius: 6px;
+    background: #1a1a1a;
+    color: #e0e0e0;
+}
+
+input[type="url"],
+input[type="text"] {
+    width: 100%;
+}
+
+select,
+#modelSelect {
+    padding: 0.6rem 2.25rem 0.6rem 0.75rem;
+    font-size: 0.95rem;
+    border: 1px solid #333333;
+    border-radius: 6px;
+    background: #1a1a1a;
+    color: #e0e0e0;
+    cursor: pointer;
+    width: 100%;
+    max-width: 12rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b0b0b0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 1rem;
+}
+
+select:hover,
+#modelSelect:hover {
+    border-color: #404040;
+}
+
+select:focus,
+#modelSelect:focus {
+    outline: none;
+    border-color: #606060;
+}
+
+input::file-selector-button {
+    padding: 0.35rem 0.75rem;
+    margin-right: 0.75rem;
+    border: none;
+    border-radius: 4px;
+    background: #404040;
+    color: #e0e0e0;
+    cursor: pointer;
+}
+
+.controls {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+button {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+
+#recognizeBtn {
+    background: #4a4a4a;
+    color: #ffffff;
+}
+
+#recognizeBtn:hover {
+    background: #606060;
+    transform: translateY(-1px);
+}
+
+#recognizeBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#downloadBtn {
+    background: #606060;
+    color: #ffffff;
+}
+
+#downloadBtn:hover {
+    background: #707070;
+    transform: translateY(-1px);
+}
+
+#downloadBtn.secondary {
+    background: #404040;
+    color: #e0e0e0;
+}
+
+.result-wrapper {
+    position: relative;
+    min-height: 200px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 20px;
+}
+
+#previewCanvas {
+    max-width: 100%;
+    max-height: 70vh;
+    display: block;
+}
+
+#previewCanvas:not([width="0"]) {
+    visibility: visible;
+}
+
+.placeholder {
+    position: absolute;
+    margin: 0;
+    padding: 1rem;
+    text-align: center;
+    color: #666666;
+    pointer-events: none;
+}
+
+.placeholder.hidden {
+    display: none;
+}

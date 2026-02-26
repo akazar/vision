@@ -1,7 +1,7 @@
 /**
  * hosting-server.js — Front-end hosting for the v4 app.
  * Registers Express routes and static middleware for: root landing page, /config,
- * /camera-stream, /image-upload, and /server-detection. Serves the v4 root for shared lib/ and config.js.
+ * /camera-stream, /image-upload, /server-detection, and /server-reasoning. Serves the v4 root for shared lib/ and config.js.
  */
 
 import express from 'express';
@@ -24,6 +24,7 @@ export function setupFrontendHosting(app) {
   const cameraStreamPath = path.join(__dirname, '..', 'client', 'camera-stream');
   const imageUploadPath = path.join(__dirname, '..', 'client', 'image-upload');
   const serverDetectionPath = path.join(__dirname, '..', 'client', 'server-detection');
+  const serverReasoningPath = path.join(__dirname, '..', 'client', 'server-reasoning');
 
   // Landing page at root (index + styles from client/landing)
   app.get('/', (req, res) => {
@@ -72,5 +73,14 @@ export function setupFrontendHosting(app) {
   });
   app.get('/server-detection/', (req, res) => {
     res.sendFile(path.join(serverDetectionPath, 'index.html'));
+  });
+
+  // Server-reasoning client at /server-reasoning
+  app.use('/server-reasoning', express.static(serverReasoningPath));
+  app.get('/server-reasoning', (req, res) => {
+    res.sendFile(path.join(serverReasoningPath, 'index.html'));
+  });
+  app.get('/server-reasoning/', (req, res) => {
+    res.sendFile(path.join(serverReasoningPath, 'index.html'));
   });
 }

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Object Reasoning</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="content">
+        <h1>Server Object Reasoning</h1>
+        <p>Load a JPG image from file or URL, then run reasoning to see the description of the image from the server.</p>
+        <div class="input-group">
+            <label for="modelSelect">Model</label>
+            <select id="modelSelect">
+                <option value="chatgpt">CAHTGPT</option>
+                <option value="gemini">GEMINI</option>
+            </select>
+        </div>
+        <div class="inputs">
+            <div class="input-group">
+                <label for="fileInput">From file</label>
+                <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+            </div>
+            <div class="input-group">
+                <label for="urlInput">From URL</label>
+                <input type="url" id="urlInput" placeholder="https://example.com/image.jpg" />
+            </div>
+            <div class="input-group">
+                <label for="promptInput">Prompt</label>
+                <input type="text" id="promptInput" placeholder="Describe this image in detail. What objects, people, or scene do you see?" />
+            </div>
+        </div>
+
+        <div class="controls">
+            <button type="button" id="reasoningBtn">Reasoning</button>
+        </div>
+
+        <div class="result-wrapper">
+            <p id="reasoningResultText" class="reasoningResultText"></p>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

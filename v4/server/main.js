@@ -8,6 +8,7 @@ import express from 'express';
 import { setupFrontendHosting } from './hosting-server.js';
 import { setupServerLogic } from './api-server.js';
 import { setupRecognitionServer } from './recognition-server.js';
+import { setupReasoningServer } from './reasoning-server.js';
 
 const PORT = process.env.PORT || 3001;
 
@@ -29,6 +30,9 @@ setupServerLogic(app);
 
 // Setup recognition API (POST /api/recognize)
 setupRecognitionServer(app);
+
+// Setup reasoning API (POST /api/reasoning)
+setupReasoningServer(app);
 
 // Start the server
 app.listen(PORT, () => {

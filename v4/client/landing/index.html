@@ -36,6 +36,7 @@
                     <li><strong>Real-time Object Detection:</strong> Process live camera feeds with configurable recognition intervals</li>
                     <li><strong>Batch Image Processing:</strong> Upload images from files or URLs for analysis</li>
                     <li><strong>Server Detection:</strong> Run recognition via the server API (Puppeteer + MediaPipe) and view results in the browser</li>
+                    <li><strong>Server Reasoning:</strong> Send an image and prompt to the server for AI reasoning (ChatGPT or Gemini) and view the response</li>
                     <li><strong>Customizable Detection Classes:</strong> Configure which object types to detect (persons, vehicles, animals, etc.)</li>
                     <li><strong>Bounding Box Visualization:</strong> Visual feedback with customizable bounding boxes and labels</li>
                     <li><strong>Action System:</strong> Execute custom functions based on detection results</li>
@@ -151,6 +152,39 @@
                         <h4>Requirements:</h4>
                         <ul>
                             <li>The recognition server must be running (e.g. <code>npm run recognize</code> or separate process on the configured port)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-header">
+                        <h2>Server Reasoning</h2>
+                        <a href="/server-reasoning" class="cta-button">Launch Server Reasoning</a>
+                    </div>
+                    <div class="module-content">
+                        <h3>AI Reasoning over Images</h3>
+                        <p>
+                            The Server Reasoning module sends an image and a text prompt to the server, which uses
+                            ChatGPT (OpenAI) or Gemini to reason about the image and return a text response. Choose
+                            the model, enter a prompt, and load an image to get AI-generated analysis or answers.
+                        </p>
+                        <h4>Capabilities:</h4>
+                        <ul>
+                            <li><strong>Image + Prompt:</strong> Upload or paste an image and ask a question or request analysis</li>
+                            <li><strong>Model Selection:</strong> Use ChatGPT (e.g. gpt-4.1-mini) or Gemini (e.g. gemini-3-flash-preview)</li>
+                            <li><strong>Server-Side Reasoning:</strong> Vision-language reasoning runs on the server via OpenAI or Google APIs</li>
+                            <li><strong>Plain-Text Response:</strong> View the model's reasoning or answer in the browser</li>
+                        </ul>
+                        <h4>Use Cases:</h4>
+                        <ul>
+                            <li>Image description, captioning, or Q&amp;A about image content</li>
+                            <li>Visual reasoning and analysis without running models in the client</li>
+                            <li>Testing the reasoning API (POST /api/reasoning) from the browser</li>
+                        </ul>
+                        <h4>Requirements:</h4>
+                        <ul>
+                            <li>Main v4 server running (reasoning API is part of the same server)</li>
+                            <li><code>OPENAI_API_KEY</code> and/or <code>GEMINI_API_KEY</code> set in <code>.env</code></li>
                         </ul>
                     </div>
                 </div>

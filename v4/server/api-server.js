@@ -32,11 +32,11 @@ try {
 
 let lastReasoningResult = '';
 
-// Load .env from v4 folder (parent of server/)
-const envPath = path.join(__dirname, '..', '.env');
-if (fs.existsSync(envPath)) {
+// Load .env: try v4/.env first, then project root .env (for missing keys)
+function loadEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return false;
   try {
-    const envContent = fs.readFileSync(envPath, 'utf8');
+    const envContent = fs.readFileSync(filePath, 'utf8');
     const lines = envContent.split(/\r?\n/);
     lines.forEach(line => {
       const trimmed = line.trim();
@@ -49,17 +49,25 @@ if (fs.existsSync(envPath)) {
               (value.startsWith("'") && value.endsWith("'"))) {
             value = value.slice(1, -1);
           }
-          process.env[key] = value;
+          if (process.env[key] === undefined) process.env[key] = value;
         }
       }
     });
-    console.log('✓ .env file loaded');
+    return true;
   } catch (err) {
     console.warn('⚠️  Error reading .env:', err.message);
-    try { require('dotenv').config({ path: envPath }); } catch (_) {}
+    return false;
   }
+}
+const envPathV4 = path.join(__dirname, '..', '.env');
+const envPathRoot = path.join(__dirname, '..', '..', '.env');
+const loadedV4 = loadEnvFile(envPathV4);
+const loadedRoot = loadEnvFile(envPathRoot);
+if (loadedV4 || loadedRoot) {
+  console.log('✓ .env file loaded');
 } else {
-  try { require('dotenv').config({ path: envPath }); } catch (_) {}
+  try { require('dotenv').config({ path: envPathV4 }); } catch (_) {}
+  try { require('dotenv').config({ path: envPathRoot }); } catch (_) {}
 }
 
 /**

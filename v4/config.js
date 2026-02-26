@@ -41,7 +41,7 @@ const CONFIG = {
     model: 'YOLO', // 'MEDIAPIPE' || 'YOLO'
     reasoning: {
         model: 'openai', // or 'google'
-        describePrompt: 'Describe this image in detail. What objects, people, or scene do you see?'
+        prompt: 'Describe this image in detail. What objects, people, or scene do you see?'
     },
     downloadResultImage: true,
     boundingBoxStyles: {
