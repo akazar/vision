@@ -47,7 +47,7 @@ async function runRecognition(canvas, model) {
         const res = await fetch(`${RECOGNITION_SERVER_URL}/api/recognize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: dataUrl, config: {...CONFIG, model: model ?? CONFIG.model } }),
+            body: JSON.stringify({ image: dataUrl, config: { ...CONFIG, recognition: { ...CONFIG.recognition, serverModel: model ?? CONFIG.recognition?.serverModel } } }),
         });
         const data = await res.json();
         if (!data.success) {
@@ -55,7 +55,6 @@ async function runRecognition(canvas, model) {
         }
         const results = data.detections ?? [];
 
-        // Draw image on a new canvas (same size), then draw boxes in image space
         const out = document.createElement('canvas');
         out.width = canvas.width;
         out.height = canvas.height;
@@ -142,7 +141,7 @@ recognizeBtn.addEventListener('click', async () => {
         return;
     }
     recognizeBtn.disabled = true;
-    const model = modelSelect.value ?? CONFIG.model;
+    const model = modelSelect.value ?? 'YOLO';
     const recognitionResults = await runRecognition(canvas, model);
     if (CONFIG.manualRecognitionActionFunctions.length > 0) {
         action(recognitionResults, CONFIG.manualRecognitionActionFunctions);  

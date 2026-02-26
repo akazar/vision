@@ -16,7 +16,9 @@ const CONFIG = {
         ],
         maxResults: 10,
         threshold: 0.5,
-        intervalMs: 500
+        intervalMs: 500,
+        localModel: 'MEDIAPIPE',  // 'MEDIAPIPE' || 'YOLO'
+        serverModel: 'YOLO', // 'MEDIAPIPE' || 'YOLO'
     },
     model: 'YOLO', // 'MEDIAPIPE' || 'YOLO'
     reasoning: {

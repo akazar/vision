@@ -20,8 +20,7 @@ try {
 } catch (err) {
   console.warn('Could not load config.js:', err.message);
   CONFIG = {
-    recognition: { threshold: 0.5, maxResults: 10, classes: [] },
-    model: 'MEDIAPIPE',
+    recognition: { threshold: 0.5, maxResults: 10, classes: [], serverModel: 'YOLO' }
   };
 }
 
@@ -49,7 +48,7 @@ export function setupRecognitionServer(app) {
         ? image
         : `data:${mime || 'image/jpeg'};base64,${image.replace(/^data:[^;]+;base64,/, '')}`;
       const effectiveConfig = config && typeof config === 'object' ? config : CONFIG;
-      recognize = effectiveConfig?.model === 'YOLO' ? recognizeYolo : recognizeMediapipe;
+      recognize = effectiveConfig?.recognition?.serverModel === 'YOLO' ? recognizeYolo : recognizeMediapipe;
 
       const detections = await recognize(dataUrl, effectiveConfig);
 

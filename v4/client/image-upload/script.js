@@ -138,7 +138,7 @@ recognizeBtn.addEventListener('click', async () => {
     }
     recognizeBtn.disabled = true;
 
-    const model = modelSelect.value ?? CONFIG.model;
+    const model = modelSelect.value ?? CONFIG.recognition.localModel;
     // For MEDIAPIPE pass a canvas; for YOLO pass original Blob/HTMLImageElement (do not overwrite currentImageSource)
     const sourceForRun = model === 'MEDIAPIPE'
         ? await getSourceCanvas(currentImageSource)
