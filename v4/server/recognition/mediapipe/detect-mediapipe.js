@@ -150,8 +150,8 @@ async function recognize(dataUrl, config) {
         delegate: "GPU",
         runningMode: "IMAGE",
       },
-      scoreThreshold: config.recognition.threshold,
-      maxResults: config.recognition.maxResults || 10,
+      scoreThreshold: config.serverRecognition.threshold,
+      maxResults: config.serverRecognition.maxResults || 10,
     };
 
     const result = await page.evaluate(runDetectionInPage, {

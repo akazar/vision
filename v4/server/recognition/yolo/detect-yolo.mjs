@@ -273,8 +273,8 @@ function generateId() {
  * @returns {Promise<Array<{ id: number, class: string, confidence: number, x: number, y: number, width: number, height: number }>>}
  */
 async function recognize(image, options = {}) {
-  const confThreshold = options?.confThreshold ?? 0.5;
-  const iouThreshold = options?.iouThreshold ?? 0.45;
+  const confThreshold = options?.serverRecognition?.threshold ?? 0.5;
+  const iouThreshold = options?.serverRecognition?.iouThreshold ?? 0.45;
 
   const session = await getSession();
   const inputName = session.inputNames[0];

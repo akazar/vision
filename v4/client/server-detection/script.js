@@ -47,7 +47,7 @@ async function runRecognition(canvas, model) {
         const res = await fetch(`${RECOGNITION_SERVER_URL}/api/recognize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: dataUrl, config: { ...CONFIG, recognition: { ...CONFIG.recognition, serverModel: model ?? CONFIG.recognition?.serverModel } } }),
+            body: JSON.stringify({ image: dataUrl, config: { ...CONFIG, serverRecognition: { ...CONFIG.serverRecognition, model: model ?? CONFIG.serverRecognition?.model } } }),
         });
         const data = await res.json();
         if (!data.success) {
