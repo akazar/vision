@@ -1,6 +1,6 @@
 // /**
 //  * Platform-agnostic recognition core: result format, filtering, and mapping.
-//  * Used by both browser (lib/recognition.js) and Node (server/recognition-node.js).
+//  * Used by both browser (lib/recognition/mediapipe/detect-mediapipe.js) and Node (server/recognition-node.js).
 //  * No DOM, MediaPipe, or Node-specific APIs — pure data transformation.
 //  *
 //  * Canonical raw detection shape (from any detector):

@@ -1,54 +1,51 @@
 /**
- * Image upload client: load image from file or URL, run recognition, show bounding boxes, download result.
- * Uses: imageToCanvas, recognize, drawBoundingBoxes from lib.
+ * Image upload client: load image from file or URL, run YOLO recognition, show bounding boxes, download result.
  */
 
 import CONFIG from '../../config.js';
 import { imageToCanvas } from '../../lib/source-to-canvas.js';
-import { recognize } from '../../lib/recognition.js';
+import { recognize } from '../../lib/recognition/mediapipe/detect-mediapipe.js';
+import { recognizeWithYolo, getImageFromSource } from '../../lib/recognition/yolo/detect-yolo.js';
 import { drawBoundingBoxes } from '../../lib/bounding-boxes.js';
 import { action } from '../../lib/actions.js';
 
 const fileInput = document.getElementById('fileInput');
 const urlInput = document.getElementById('urlInput');
+const modelSelect = document.getElementById('modelSelect');
 const recognizeBtn = document.getElementById('recognizeBtn');
 const downloadBtn = document.getElementById('downloadBtn');
 const previewCanvas = document.getElementById('previewCanvas');
 const placeholder = document.getElementById('placeholder');
 
-/** Current image source: Blob (from file) or HTMLImageElement (from URL). Cleared after conversion to canvas. */
+/** Current image source: Blob (from file) or HTMLImageElement (from URL). */
 let currentImageSource = null;
 /** Canvas with image + bounding boxes after recognition (used for display and download). */
 let resultCanvas = null;
 
 /**
- * Resolve current image to a canvas: from file (Blob) or from URL (Image).
- */
-async function getSourceCanvas() {
-    if (!currentImageSource) return null;
-    if (currentImageSource instanceof Blob) {
-        return imageToCanvas(currentImageSource);
-    }
-    if (currentImageSource instanceof HTMLImageElement && currentImageSource.complete && currentImageSource.naturalWidth) {
-        return imageToCanvas(currentImageSource);
-    }
-    return null;
-}
-
-/**
  * Run recognition and show result canvas with bounding boxes; log results and show Download.
+ * Uses browser-side YOLOv11n ONNX via onnxruntime-web.
  */
-async function runRecognition(canvas) {    
-    const results = await recognize(
-        canvas,
-        CONFIG
-    );
-    // Draw image on a new canvas (same size), then draw boxes in image space
+async function runRecognition(currentImageSource, model = 'YOLO') {
+    let results = null;
+    if (model === 'MEDIAPIPE') {
+        results = await recognize(
+            currentImageSource,
+            CONFIG
+        );
+    } else {
+        results = await recognizeWithYolo(currentImageSource);
+    }        
+
+    // Draw image on a new canvas (same size as original image), then draw boxes in image space
+    const img = model === 'YOLO' ? await getImageFromSource(currentImageSource) : currentImageSource;
     const out = document.createElement('canvas');
-    out.width = canvas.width;
-    out.height = canvas.height;
+    let width = img.naturalWidth ?? img.width;
+    let height = img.naturalHeight ?? img.height;
+    out.width = width;
+    out.height = height;
     const ctx = out.getContext('2d');
-    ctx.drawImage(canvas, 0, 0);
+    ctx.drawImage(img, 0, 0, width, height);
     const boxes = results.map((r) => ({
         x: r.coordinates.x,
         y: r.coordinates.y,
@@ -88,6 +85,21 @@ fileInput.addEventListener('change', () => {
 });
 
 /**
+ * Resolve current image to a canvas: from file (Blob) or from URL (Image).
+ */
+async function getSourceCanvas(currentImageSource) {
+    if (!currentImageSource) return null;
+    if (currentImageSource instanceof Blob) {
+        return imageToCanvas(currentImageSource);
+    }
+    if (currentImageSource instanceof HTMLImageElement && currentImageSource.complete && currentImageSource.naturalWidth) {
+        return imageToCanvas(currentImageSource);
+    }
+    return null;
+}
+
+
+/**
  * Load image from URL into an HTMLImageElement and set as current source.
  */
 function loadImageFromUrl(url) {
@@ -120,13 +132,19 @@ async function ensureImageSourceFromUrl() {
 
 recognizeBtn.addEventListener('click', async () => {
     if (!(await ensureImageSourceFromUrl())) return;
-        const canvas = await getSourceCanvas();
-    if (!canvas) {
+    if (!currentImageSource) {
         alert('Please select an image file or enter a valid image URL first.');
         return;
     }
     recognizeBtn.disabled = true;
-    const recognitionResults = await runRecognition(canvas);
+
+    const model = modelSelect.value ?? CONFIG.model;
+    // For MEDIAPIPE pass a canvas; for YOLO pass original Blob/HTMLImageElement (do not overwrite currentImageSource)
+    const sourceForRun = model === 'MEDIAPIPE'
+        ? await getSourceCanvas(currentImageSource)
+        : currentImageSource;
+    const recognitionResults = await runRecognition(sourceForRun, model);
+
     if (CONFIG.manualRecognitionActionFunctions.length > 0) {
         action(recognitionResults, CONFIG.manualRecognitionActionFunctions);  
     }

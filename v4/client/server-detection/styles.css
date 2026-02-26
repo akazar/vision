@@ -39,6 +39,7 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    margin-bottom: 15px;
 }
 
 .input-group label {

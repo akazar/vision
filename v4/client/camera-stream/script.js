@@ -1,7 +1,7 @@
 import CONFIG from '../../config.js';
 import { getCameraStream, attachCameraStreamToVideo, waitForVideoAndPlay } from '../../lib/capture.js';
 import { imageToCanvas } from '../../lib/source-to-canvas.js';
-import { recognize } from '../../lib/recognition.js';
+import { recognize } from '../../lib/recognition/mediapipe/detect-mediapipe.js';
 import { boundingBoxes, clearBoundingBoxes } from '../../lib/bounding-boxes.js';
 import { action } from '../../lib/actions.js';
 

@@ -8,7 +8,7 @@ const CONFIG = {
         threshold: 0.5,
         intervalMs: 500
     },
-    model: 'MEDIAPIPE', // 'MEDIAPIPE' || 'YOLO'
+    model: 'YOLO', // 'MEDIAPIPE' || 'YOLO'
     reasoning: {
         model: 'openai', // or 'google'
         describePrompt: 'Describe this image in detail. What objects, people, or scene do you see?'
