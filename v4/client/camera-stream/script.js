@@ -2,6 +2,7 @@ import CONFIG from '../../config.js';
 import { getCameraStream, attachCameraStreamToVideo, waitForVideoAndPlay } from '../../lib/capture.js';
 import { imageToCanvas } from '../../lib/source-to-canvas.js';
 import { recognize } from '../../lib/recognition/mediapipe/detect-mediapipe.js';
+import { recognizeWithYolo } from '../../lib/recognition/yolo/detect-yolo.js';
 import { boundingBoxes, clearBoundingBoxes } from '../../lib/bounding-boxes.js';
 import { action } from '../../lib/actions.js';
 
@@ -16,29 +17,37 @@ let recognitionResults = [];
 /**
  * Performs manual recognition on the current video frame.
  * - Checks if the video element is ready and has valid manual recognition functions.
- * - Converts the video frame to a canvas and performs recognition.
+ * - Converts the video frame to a canvas and performs recognition using the selected model.
  * - Calls the action function with the recognition results.
  */
 async function manualRecognition() {
-    const { recognition, model, manualRecognitionActionFunctions } = CONFIG;
+    const { manualRecognitionActionFunctions } = CONFIG;
+    const model = document.getElementById('modelSelect')?.value ?? 'YOLO';
 
     if (videoElement && videoElement.readyState >= 2 && manualRecognitionActionFunctions.length > 0) {
         const sourceCanvas = await imageToCanvas(videoElement);
-        recognitionResults = await recognize(sourceCanvas, recognition.classes, recognition.threshold, model);
-        action(recognitionResults, manualRecognitionActionFunctions);  
+        recognitionResults = model === 'MEDIAPIPE'
+            ? await recognize(sourceCanvas, CONFIG)
+            : await recognizeWithYolo(sourceCanvas, CONFIG);
+        action(recognitionResults, manualRecognitionActionFunctions);
     }
 }
 
 /**
- * Start the recognition loop for real-time object detection
+ * Start the recognition loop for real-time object detection.
+ * Uses the currently selected model (YOLO or MEDIAPIPE) from the model selector.
  */
 function startRecognitionLoop() {
     const { recognition, boundingBoxStyles, recognitionActionFunctions, regularActionFunctions } = CONFIG;
+    const modelSelect = document.getElementById('modelSelect');
 
     recognitionInterval = setInterval(async () => {
         if (videoElement && videoElement.readyState >= 2) {
+            const model = modelSelect?.value ?? 'YOLO';
             const sourceCanvas = await imageToCanvas(videoElement);
-            recognitionResults = await recognize(sourceCanvas, CONFIG);
+            recognitionResults = model === 'MEDIAPIPE'
+                ? await recognize(sourceCanvas, CONFIG)
+                : await recognizeWithYolo(sourceCanvas, CONFIG);
             if (boundingBoxStyles) {
                 boundingBoxes(recognitionResults, videoElement, boundingBoxStyles);
             }

@@ -1,20 +1,8 @@
 /**
  * Browser-side YOLOv11n object detection (ONNX Runtime Web).
- * Entry point: recognizeWithYolo(source).
+ * Entry point: recognizeWithYolo(source, config).
  * Requires global `ort` from onnxruntime-web (e.g. script tag in the page).
  */
-
-const COCO_CLASSES = [
-  'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
-  'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
-  'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-  'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard',
-  'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-  'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
-  'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard',
-  'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase',
-  'scissors', 'teddy bear', 'hair drier', 'toothbrush',
-];
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 const sigmoid = (x) => 1 / (1 + Math.exp(-x));
@@ -206,8 +194,8 @@ function mapBoxToOriginal(bbox, ctx) {
 }
 
 /**
- * Resolve Blob or HTMLImageElement to an HTMLImageElement (for YOLO input).
- * @param {Blob|HTMLImageElement} source
+ * Resolve Blob, HTMLImageElement, or HTMLCanvasElement to an HTMLImageElement (for YOLO input).
+ * @param {Blob|HTMLImageElement|HTMLCanvasElement} source
  * @returns {Promise<HTMLImageElement>}
  */
 export async function getImageFromSource(source) {
@@ -229,16 +217,24 @@ export async function getImageFromSource(source) {
       img.src = url;
     });
   }
+  if (source instanceof HTMLCanvasElement) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Failed to load image from Canvas'));
+      img.src = source.toDataURL('image/jpeg', 0.95);
+    });
+  }
   throw new Error('Unsupported image source type for YOLO recognition');
 }
 
 /**
- * Run YOLOv11n object detection on an image source (Blob or HTMLImageElement).
+ * Run YOLOv11n object detection on an image source (Blob, HTMLImageElement, or HTMLCanvasElement).
  * Returns detections in canonical shape: { class, confidence, coordinates, size }[].
- * @param {Blob|HTMLImageElement} source
+ * @param {Blob|HTMLImageElement|HTMLCanvasElement} source
  * @returns {Promise<Array<{ class: string, confidence: number, coordinates: { x, y }, size: { width, height } }>>}
  */
-export async function recognizeWithYolo(source) {
+export async function recognizeWithYolo(source, config) {
   const sess = await getYoloSession();
   const inputName = sess.inputNames[0];
   const outputName = sess.outputNames[0];
@@ -253,7 +249,7 @@ export async function recognizeWithYolo(source) {
 
   const final = dets.map((d) => {
     const b = mapBoxToOriginal(d.bbox, prep);
-    const cls = COCO_CLASSES[d.classId] ?? `class_${d.classId}`;
+    const cls = config.recognition.classes[d.classId] ?? `class_${d.classId}`;
     const confidence = d.conf;
 
     return {

@@ -11,15 +11,25 @@
         <h1>Camera Stream</h1>
         <p>Camera stream recognition test.</p>
         <div class="controls">
-            <button id="startBtn">Start Camera</button>
-            <button id="stopBtn">Stop Camera</button>
-            <button id="startRecognitionBtn">Start Recognition</button>
-            <button id="stopRecognitionBtn">Stop Recognition</button>
-            <button id="manualRecognitionBtn">Manual Recognition</button>
+            <div class="controls-row">
+                <button id="startBtn">Start Camera</button>
+                <button id="stopBtn">Stop Camera</button>
+                <button id="startRecognitionBtn">Start Recognition</button>
+                <button id="stopRecognitionBtn">Stop Recognition</button>
+                <button id="manualRecognitionBtn">Manual Recognition</button>
+                <div class="model-cell">
+                    <label for="modelSelect" class="controls-label">Model</label>
+                    <select id="modelSelect">
+                        <option value="YOLO">YOLO</option>
+                        <option value="MEDIAPIPE">MEDIAPIPE</option>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Entry point: script.js imports config, capture, and recognition -->
+    <!-- ONNX Runtime for YOLO model -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
     <script type="module" src="script.js"></script>
 </body>
 </html>

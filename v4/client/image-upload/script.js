@@ -34,7 +34,7 @@ async function runRecognition(currentImageSource, model = 'YOLO') {
             CONFIG
         );
     } else {
-        results = await recognizeWithYolo(currentImageSource);
+        results = await recognizeWithYolo(currentImageSource, CONFIG);
     }        
 
     // Draw image on a new canvas (same size as original image), then draw boxes in image space
